@@ -41,6 +41,8 @@ import { PhoneMockup } from "../editor/PhoneMockup";
 import { SmsPreview } from "../editor/SmsPreview";
 import { InboxPreview } from "../editor/InboxPreview";
 import { RailSection } from "../editor/RailSection";
+import { FloatingCard, useAnchorRect } from "../editor/FloatingEditor";
+import { ContentBlockForm } from "./ContentBlockForm";
 import { Select } from "../editor/Select";
 import { Field, TextArea, TextInput, ToggleRow } from "../editor/controls";
 import { ScaledEmail } from "./ScaledEmail";
@@ -659,6 +661,17 @@ export function CampaignWizard() {
           </div>
         </footer>
       </div>
+
+      {floatingBlock && (
+        <FloatingCard
+          anchor={anchor}
+          title={`Editing · ${BLOCK_LABELS[floatingBlock]}`}
+          subtitle="Campaign content — the template shell stays locked"
+          onClose={() => setOpenBlock(null)}
+        >
+          <ContentBlockForm id={floatingBlock} campaign={campaign} update={update} />
+        </FloatingCard>
+      )}
 
       <TemplatePicker
         open={picker}
