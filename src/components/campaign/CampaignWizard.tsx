@@ -563,49 +563,48 @@ export function CampaignWizard() {
                   ) : emailMode === "mobile" ? (
                     <div className="flex justify-center">
                       <PhoneMockup scale={0.78}>
-                        <EmailPreview campaign={campaign} interactive={false} width={373} />
+                        <EmailPreview
+                          campaign={campaign}
+                          interactive
+                          inlineEdit
+                          update={update}
+                          selected={openBlock}
+                          onSelect={setOpenBlock}
+                          lockedBlocks={LOCKED_BLOCKS}
+                          width={373}
+                        />
                       </PhoneMockup>
                     </div>
                   ) : (
                     <EmailPreview
                       campaign={campaign}
-                      interactive={false}
+                      interactive
+                      inlineEdit
+                      update={update}
+                      selected={openBlock}
+                      onSelect={setOpenBlock}
+                      lockedBlocks={LOCKED_BLOCKS}
                       width={600}
                       dark={emailMode === "dark"}
                     />
                   ))}
 
-                {/* Promotion preview lives in the preview column */}
+                {/* Promotion preview — a plain, larger card (no device frame) */}
                 {step === "promotion" && (
                   <div className="flex justify-center">
-                    {hasText(channel) && !hasEmail(channel) ? (
-                      <PhoneMockup scale={0.8}>
-                        <div className="p-4">
-                          <PromoPreviewCard
-                            accent={campaign.theme.accent}
-                            hotel={campaign.footer.company || campaign.header.logoText}
-                            firstName="Liyat"
-                            tagline={tagline}
-                            discount={discount}
-                            enabled={promoOn}
-                            compact
-                          />
-                        </div>
-                      </PhoneMockup>
-                    ) : (
-                      <div className="w-full max-w-md">
-                        <PromoPreviewCard
-                          accent={campaign.theme.accent}
-                          hotel={campaign.footer.company || campaign.header.logoText}
-                          firstName="Liyat"
-                          tagline={tagline}
-                          discount={discount}
-                          enabled={promoOn}
-                        />
-                      </div>
-                    )}
+                    <div className="w-full max-w-lg">
+                      <PromoPreviewCard
+                        accent={campaign.theme.accent}
+                        hotel={campaign.footer.company || campaign.header.logoText}
+                        firstName="Liyat"
+                        tagline={tagline}
+                        discount={discount}
+                        enabled={promoOn}
+                      />
+                    </div>
                   </div>
                 )}
+
               </div>
             </section>
           )}
