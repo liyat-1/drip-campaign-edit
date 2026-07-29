@@ -224,7 +224,7 @@ export function CampaignWizard() {
             update((d) => void (d.meta.name = draftName.trim()));
             setCreated(true);
           }}
-          className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+          className="w-full max-w-md overflow-hidden rounded-md bg-white shadow-2xl"
         >
           <div className="flex items-start justify-between gap-3 px-6 pb-4 pt-5">
             <div>
@@ -236,7 +236,7 @@ export function CampaignWizard() {
             <Link
               to="/"
               aria-label="Cancel"
-              className="grid size-8 place-items-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+              className="grid size-8 place-items-center rounded-md text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
             >
               <X size={17} />
             </Link>
@@ -249,13 +249,13 @@ export function CampaignWizard() {
           <div className="flex items-center justify-end gap-2.5 px-6 py-4">
             <Link
               to="/"
-              className="grid h-10 place-items-center rounded-lg border border-zinc-200 px-5 text-[13px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+              className="grid h-10 place-items-center rounded-md border border-zinc-200 px-5 text-[13px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
             >
               Cancel
             </Link>
             <button
               type="submit"
-              className="h-10 rounded-lg bg-zinc-900 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-zinc-800"
+              className="h-10 rounded-md bg-blue-600 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700"
             >
               Continue
             </button>
@@ -269,7 +269,7 @@ export function CampaignWizard() {
   if (minimized) {
     return (
       <div className="grid min-h-dvh place-items-end bg-zinc-900/70 p-4 font-sans">
-        <div className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-2xl">
+        <div className="flex items-center gap-3 rounded-md border border-zinc-200 bg-white px-4 py-3 shadow-2xl">
           <Pencil size={15} className="text-zinc-400" />
           <div className="flex flex-col">
             <input
@@ -285,7 +285,7 @@ export function CampaignWizard() {
           <button
             onClick={() => setMinimized(false)}
             aria-label="Resume editor"
-            className="grid size-9 place-items-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+            className="grid size-9 place-items-center rounded-md text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
           >
             <Maximize2 size={15} />
           </button>
@@ -295,7 +295,7 @@ export function CampaignWizard() {
   }
 
   const chromeBtn =
-    "grid size-8 place-items-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-30";
+    "grid size-8 place-items-center rounded-md text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-30";
 
   const stepIndex = STEPS.findIndex((s) => s.id === step);
   const canLeavePreferences = channel !== null;
@@ -311,7 +311,7 @@ export function CampaignWizard() {
         role="dialog"
         aria-label="Create drip campaign"
         className={`flex min-h-0 flex-1 flex-col overflow-hidden bg-zinc-100 shadow-2xl ${
-          expanded ? "" : "md:rounded-2xl md:border md:border-zinc-300"
+          expanded ? "" : "md:rounded-md md:border md:border-zinc-300"
         }`}
       >
         {/* Chrome */}
@@ -321,7 +321,7 @@ export function CampaignWizard() {
               value={campaign.meta.name}
               aria-label="Campaign name"
               onChange={(e) => update((d) => void (d.meta.name = e.target.value))}
-              className="min-w-0 max-w-[20rem] flex-1 truncate rounded-lg px-2 py-1.5 text-[14px] font-semibold outline-none transition-colors hover:bg-zinc-100 focus:bg-zinc-100"
+              className="min-w-0 max-w-[20rem] flex-1 truncate rounded-md px-2 py-1.5 text-[14px] font-semibold outline-none transition-colors hover:bg-zinc-100 focus:bg-zinc-100"
             />
             {channel && (
               <span className="hidden shrink-0 items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-1 text-[11px] font-medium text-zinc-600 sm:flex">
@@ -341,7 +341,7 @@ export function CampaignWizard() {
           <div className="flex shrink-0 items-center gap-1">
             <button
               onClick={() => notify("Draft saved")}
-              className="mr-1 hidden h-8 items-center rounded-lg border border-zinc-200 px-3 text-[12.5px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50 sm:flex"
+              className="mr-1 hidden h-8 items-center rounded-md border border-zinc-200 px-3 text-[12.5px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50 sm:flex"
             >
               Save changes
             </button>
@@ -628,7 +628,7 @@ export function CampaignWizard() {
             {stepIndex > 0 && (
               <button
                 onClick={() => setStep(STEPS[stepIndex - 1].id)}
-                className="h-10 rounded-lg border border-zinc-200 px-5 text-[13px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+                className="h-10 rounded-md border border-zinc-200 px-5 text-[13px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
               >
                 Back
               </button>
@@ -642,7 +642,7 @@ export function CampaignWizard() {
                 if (stepIndex === STEPS.length - 1) return notify("Campaign scheduled");
                 setStep(STEPS[stepIndex + 1].id);
               }}
-              className="h-10 rounded-lg bg-zinc-900 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
+              className="h-10 rounded-md bg-blue-600 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {stepIndex === STEPS.length - 1 ? "Schedule campaign" : "Next"}
             </button>
@@ -800,7 +800,7 @@ function PreferencesRail(props: {
         onToggle={() => toggle(3)}
       >
         <div className="p-4">
-          <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-5">
+          <div className="rounded-md border border-emerald-100 bg-emerald-50/70 p-5">
             <div className="flex items-center gap-3">
               <CalendarCheck2 size={22} className="text-emerald-600" />
               <div>
@@ -889,7 +889,7 @@ function ContentRail(props: {
     <>
       {showTabs && (
         <div className="border-b border-zinc-100 p-3">
-          <div className="flex rounded-lg bg-zinc-100 p-1">
+          <div className="flex rounded-md bg-zinc-100 p-1">
             {(
               [
                 { id: "text" as const, Icon: MessageSquare, label: "Text content" },
@@ -996,7 +996,7 @@ function ContentRail(props: {
                   />
                   <button
                     onClick={() => props.onTest("text")}
-                    className="h-10 shrink-0 rounded-lg border border-zinc-200 px-4 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900"
+                    className="h-10 shrink-0 rounded-md border border-zinc-200 px-4 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900"
                   >
                     Send test
                   </button>
@@ -1009,7 +1009,7 @@ function ContentRail(props: {
 
       {activeTab === "email" && hasEmail(channel) && templateId === null && (
         <div className="p-4">
-          <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-center">
+          <div className="rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-6 text-center">
             <span className="mx-auto grid size-11 place-items-center rounded-full bg-white text-zinc-500 ring-1 ring-zinc-200">
               <LayoutTemplate size={19} />
             </span>
@@ -1022,7 +1022,7 @@ function ContentRail(props: {
             </p>
             <button
               onClick={openPicker}
-              className="mt-4 h-10 rounded-lg bg-zinc-900 px-5 text-[13px] font-semibold text-white transition-colors hover:bg-zinc-800"
+              className="mt-4 h-10 rounded-md bg-blue-600 px-5 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700"
             >
               Choose a design
             </button>
@@ -1040,7 +1040,7 @@ function ContentRail(props: {
             onToggle={() => toggle(1)}
           >
             <div className="space-y-4 p-4">
-              <div className="flex items-center gap-3 rounded-xl border border-zinc-200 p-3">
+              <div className="flex items-center gap-3 rounded-md border border-zinc-200 p-3">
                 <ScaledEmail campaign={campaign} width={92} height={66} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-semibold text-zinc-900">
@@ -1050,7 +1050,7 @@ function ContentRail(props: {
                 </div>
                 <button
                   onClick={openPicker}
-                  className="flex h-9 shrink-0 items-center gap-1 rounded-lg border border-zinc-200 px-3 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900"
+                  className="flex h-9 shrink-0 items-center gap-1 rounded-md border border-zinc-200 px-3 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900"
                 >
                   Change <ChevronRight size={14} />
                 </button>
@@ -1105,7 +1105,7 @@ function ContentRail(props: {
               {LOCKED_BLOCKS.map((id) => (
                 <div
                   key={id}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-dashed border-zinc-200 bg-zinc-50/60 px-3 py-2.5"
+                  className="flex items-center justify-between gap-3 rounded-md border border-dashed border-zinc-200 bg-zinc-50/60 px-3 py-2.5"
                 >
                   <span className="flex items-center gap-2.5">
                     <Lock size={13} className="text-zinc-400" />
@@ -1139,7 +1139,7 @@ function ContentRail(props: {
                   />
                   <button
                     onClick={() => props.onTest("email")}
-                    className="h-10 shrink-0 rounded-lg border border-zinc-200 px-4 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900"
+                    className="h-10 shrink-0 rounded-md border border-zinc-200 px-4 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900"
                   >
                     Send test
                   </button>
@@ -1167,13 +1167,13 @@ function BlockAccordion({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-zinc-200">
+    <div className="overflow-hidden rounded-md border border-zinc-200">
       <button
         onClick={onToggle}
         aria-expanded={open}
         aria-controls={`block-${id}`}
         className={`flex w-full items-center justify-between px-3.5 py-2.5 text-left transition-colors ${
-          open ? "bg-zinc-900 text-white" : "hover:bg-zinc-50"
+          open ? "bg-blue-600 text-white" : "hover:bg-zinc-50"
         }`}
       >
         <span className="flex items-center gap-2 text-[13px] font-medium">
@@ -1343,7 +1343,7 @@ function PreviewHeader({
         {label}
       </p>
       {showEmailModes && (
-        <div className="flex rounded-lg bg-zinc-100 p-0.5">
+        <div className="flex rounded-md bg-zinc-100 p-0.5">
           {EMAIL_MODES.map(({ id, Icon, label }) => (
             <button
               key={id}
@@ -1444,7 +1444,7 @@ function NoTemplatePreview({
         <EmailPreview campaign={campaign} interactive={false} width={compact ? 420 : 600} />
       </div>
       <div className="absolute inset-0 grid place-items-start justify-center pt-24">
-        <div className="rounded-2xl border border-zinc-200 bg-white/95 px-6 py-5 text-center shadow-xl backdrop-blur">
+        <div className="rounded-md border border-zinc-200 bg-white/95 px-6 py-5 text-center shadow-xl backdrop-blur">
           <span className="mx-auto grid size-10 place-items-center rounded-full bg-zinc-100 text-zinc-500">
             <FileText size={18} />
           </span>
@@ -1456,7 +1456,7 @@ function NoTemplatePreview({
           </p>
           <button
             onClick={onChoose}
-            className="mt-3 h-9 rounded-lg bg-zinc-900 px-4 text-[12.5px] font-semibold text-white hover:bg-zinc-800"
+            className="mt-3 h-9 rounded-md bg-blue-600 px-4 text-[12.5px] font-semibold text-white hover:bg-blue-700"
           >
             Select a template
           </button>
@@ -1485,15 +1485,15 @@ function ChannelCard({
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-xl border p-3.5 text-left transition-all ${
+      className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-md border p-3.5 text-left transition-all ${
         active
-          ? "border-zinc-900 bg-zinc-900/[0.03] ring-2 ring-zinc-900/10"
+          ? "border-blue-600 bg-blue-50/60 ring-1 ring-blue-600/20"
           : "border-zinc-200 hover:border-zinc-400"
       }`}
     >
       <span
-        className={`grid size-9 shrink-0 place-items-center rounded-lg ${
-          active ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-500"
+        className={`grid size-9 shrink-0 place-items-center rounded-md ${
+          active ? "bg-blue-600 text-white" : "bg-zinc-100 text-zinc-500"
         }`}
       >
         <Icon size={17} />
@@ -1504,7 +1504,7 @@ function ChannelCard({
       </span>
       <span
         className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border ${
-          active ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-300"
+          active ? "border-blue-600 bg-blue-600 text-white" : "border-zinc-300"
         }`}
       >
         {active && <Check size={12} />}
@@ -1530,7 +1530,7 @@ function MediaUploader({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
+      <div className="flex items-start gap-2.5 rounded-md border border-amber-200 bg-amber-50 px-3 py-2.5">
         <AlertTriangle size={15} className="mt-0.5 shrink-0 text-amber-500" />
         <p className="text-[12px] leading-relaxed text-amber-900">
           Adding an image is <strong>strongly recommended</strong> — MMS previews get much higher
@@ -1539,7 +1539,7 @@ function MediaUploader({
       </div>
 
       {value ? (
-        <div className="relative overflow-hidden rounded-lg border border-zinc-200">
+        <div className="relative overflow-hidden rounded-md border border-zinc-200">
           <img src={value} alt="" className="block max-h-56 w-full object-cover" />
           <button
             onClick={() => onChange(null)}
@@ -1561,7 +1561,7 @@ function MediaUploader({
             setDrag(false);
             pick(e.dataTransfer.files?.[0]);
           }}
-          className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-8 text-center transition-colors ${
+          className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-8 text-center transition-colors ${
             drag ? "border-zinc-900 bg-zinc-50" : "border-zinc-300 hover:border-zinc-400"
           }`}
         >
@@ -1572,7 +1572,7 @@ function MediaUploader({
             <p className="text-[13px] font-medium text-zinc-800">Drop a file here</p>
             <p className="text-[11.5px] text-zinc-500">or click to browse</p>
           </div>
-          <span className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-[12px] font-medium text-zinc-700">
+          <span className="mt-1 inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-[12px] font-medium text-zinc-700">
             <Upload size={12} /> Select file
           </span>
           <input
@@ -1601,9 +1601,9 @@ function MediaUploader({
                 onClick={() => onChange(f.url)}
                 aria-pressed={active}
                 title={f.name}
-                className={`group relative overflow-hidden rounded-lg border transition-all ${
+                className={`group relative overflow-hidden rounded-md border transition-all ${
                   active
-                    ? "border-zinc-900 ring-2 ring-zinc-900/20"
+                    ? "border-blue-600 ring-1 ring-blue-600/25"
                     : "border-zinc-200 hover:border-zinc-400"
                 }`}
               >
@@ -1620,7 +1620,7 @@ function MediaUploader({
           {[0, 1].map((i) => (
             <div
               key={i}
-              className="grid h-16 w-24 place-items-center rounded-lg border border-dashed border-zinc-200 bg-zinc-50 text-zinc-400"
+              className="grid h-16 w-24 place-items-center rounded-md border border-dashed border-zinc-200 bg-zinc-50 text-zinc-400"
             >
               <FileText size={16} />
             </div>
@@ -1650,7 +1650,7 @@ function PromoPreviewCard({
 }) {
   if (!enabled) {
     return (
-      <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-8 text-center text-zinc-500">
+      <div className="rounded-md border border-dashed border-zinc-300 bg-white p-8 text-center text-zinc-500">
         <BadgePercent size={20} className="mx-auto mb-2 text-zinc-400" />
         <p className="text-[13px] font-medium">Promotion is turned off</p>
         <p className="mt-1 text-[11.5px]">Toggle it on to preview the promo card.</p>
@@ -1659,7 +1659,7 @@ function PromoPreviewCard({
   }
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl text-white shadow-lg ${
+      className={`relative overflow-hidden rounded-md text-white shadow-lg ${
         compact ? "p-4" : "p-6"
       }`}
       style={{
@@ -1693,7 +1693,7 @@ function PromoPreviewCard({
           {firstName.toUpperCase()}, you unlocked
         </div>
         <div
-          className={`mt-2 -rotate-1 rounded-lg bg-black/25 shadow-lg ring-1 ring-white/10 backdrop-blur ${
+          className={`mt-2 -rotate-1 rounded-md bg-black/25 shadow-lg ring-1 ring-white/10 backdrop-blur ${
             compact ? "px-3 py-2" : "px-4 py-3"
           }`}
         >
