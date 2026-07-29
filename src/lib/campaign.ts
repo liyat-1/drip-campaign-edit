@@ -215,6 +215,9 @@ const baseCampaign: Campaign = {
       { id: uid(), label: "Unsubscribe", url: "#" },
     ],
     text: "#6b7280",
+    socialBg: "#111827",
+    socialColor: "#ffffff",
+    socialRadius: 999,
   },
 };
 
