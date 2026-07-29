@@ -418,15 +418,15 @@ export function BuilderShell({
               >
                 <div className="space-y-5 p-4">
                   <div className="space-y-2">
-                    <div className="rounded-xl border border-zinc-200 p-3">
-                      <LayoutThumb id={layout} big />
-                      <p className="mt-3 text-[13px] font-semibold text-zinc-900">
-                        {activeLayout.name}
-                      </p>
-                      <p className="mt-0.5 text-[11.5px] leading-snug text-zinc-500">
-                        {activeLayout.desc}
-                      </p>
+                    <div className="flex justify-center rounded-xl border border-zinc-200 p-3">
+                      <TemplatePreview campaign={campaign} />
                     </div>
+                    <p className="text-[13px] font-semibold text-zinc-900">
+                      {activeLayout.name}
+                    </p>
+                    <p className="text-[11.5px] leading-snug text-zinc-500">
+                      {activeLayout.desc}
+                    </p>
                     <button
                       onClick={() => setLayoutPicker(true)}
                       className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-zinc-200 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900"
