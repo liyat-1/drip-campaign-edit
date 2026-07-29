@@ -134,6 +134,23 @@ function LayoutThumb({ id, big = false }: { id: LayoutId; big?: boolean }) {
   );
 }
 
+/** Live, scaled-down render of the current campaign — the real template preview. */
+function TemplatePreview({ campaign: c }: { campaign: Campaign }) {
+  const w = c.theme.contentWidth;
+  const boxW = 248;
+  const scale = boxW / w;
+  return (
+    <div
+      className="overflow-hidden rounded-lg ring-1 ring-black/10"
+      style={{ width: boxW, height: 172, background: c.theme.pageBg }}
+    >
+      <div style={{ width: w, transform: `scale(${scale})`, transformOrigin: "top left" }}>
+        <EmailPreview campaign={c} interactive={false} inlineEdit={false} width={w} />
+      </div>
+    </div>
+  );
+}
+
 type Mode = "desktop" | "mobile" | "inbox" | "dark";
 const MODES = [
   { id: "desktop" as const, label: "Desktop", Icon: Monitor },
