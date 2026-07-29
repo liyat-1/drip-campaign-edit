@@ -33,6 +33,7 @@ function Block({
   interactive,
   children,
   accent,
+  locked = false,
 }: {
   id: BlockId;
   selected: BlockId | null;
@@ -41,9 +42,27 @@ function Block({
   interactive?: boolean;
   children: React.ReactNode;
   accent: string;
+  locked?: boolean;
 }) {
   const active = selected === id;
   if (!interactive) return <div>{children}</div>;
+
+  if (locked) {
+    return (
+      <div data-block={id} aria-disabled className="group relative cursor-not-allowed select-none">
+        <div className="opacity-45 grayscale">{children}</div>
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-10 bg-zinc-500/5"
+          style={{ boxShadow: "inset 0 0 0 1px rgba(113,113,122,0.35)" }}
+        />
+        <span className="pointer-events-none absolute right-2 top-2 z-20 flex items-center gap-1 bg-zinc-900/80 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-white opacity-0 transition-opacity group-hover:opacity-100">
+          Locked · {label}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div
       data-block={id}
@@ -70,7 +89,7 @@ function Block({
       />
       {active && (
         <span
-          className="absolute left-0 top-0 z-20 -translate-y-full rounded-t px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-white"
+          className="absolute left-0 top-0 z-20 -translate-y-full px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-white"
           style={{ background: accent }}
         >
           {label}
@@ -80,6 +99,7 @@ function Block({
     </div>
   );
 }
+
 
 function Editable({
   html,
