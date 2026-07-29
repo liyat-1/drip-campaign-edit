@@ -358,36 +358,59 @@ export function CampaignWizard() {
           </div>
         </header>
 
-        {/* Step nav */}
+        {/* Step rail — connected progress track */}
         <nav
           aria-label="Campaign steps"
-          className="flex shrink-0 items-center gap-1 border-b border-zinc-200 bg-white px-3 pb-2 sm:px-4"
+          className="shrink-0 border-b border-zinc-200 bg-white px-3 pb-3 pt-1 sm:px-4"
         >
-          {STEPS.map((s, i) => {
-            const locked = s.id !== "preferences" && !canLeavePreferences;
-            const done = i < stepIndex;
-            return (
-              <button
-                key={s.id}
-                disabled={locked}
-                onClick={() => setStep(s.id)}
-                aria-current={step === s.id}
-                className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors disabled:opacity-40 ${
-                  step === s.id ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-100"
-                }`}
-              >
-                <span
-                  className={`grid size-5 place-items-center rounded-full text-[10.5px] font-semibold ${
-                    step === s.id ? "bg-white/20" : done ? "bg-emerald-100 text-emerald-700" : "bg-zinc-100"
-                  }`}
-                >
-                  {done ? <Check size={11} /> : i + 1}
-                </span>
-                {s.label}
-              </button>
-            );
-          })}
+          <ol className="flex items-stretch gap-0">
+            {STEPS.map((s, i) => {
+              const locked = s.id !== "preferences" && !canLeavePreferences;
+              const done = i < stepIndex;
+              const current = step === s.id;
+              return (
+                <li key={s.id} className="flex min-w-0 flex-1 items-center">
+                  <button
+                    disabled={locked}
+                    onClick={() => setStep(s.id)}
+                    aria-current={current ? "step" : undefined}
+                    className="group flex min-w-0 flex-1 flex-col gap-2 text-left disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span
+                        className={`grid size-[22px] shrink-0 place-items-center text-[11px] font-semibold transition-colors ${
+                          current
+                            ? "bg-blue-600 text-white"
+                            : done
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-zinc-100 text-zinc-500"
+                        }`}
+                      >
+                        {done ? <Check size={12} /> : i + 1}
+                      </span>
+                      <span className="min-w-0">
+                        <span
+                          className={`block truncate text-[12.5px] font-semibold ${
+                            current ? "text-zinc-900" : "text-zinc-500"
+                          }`}
+                        >
+                          {s.label}
+                        </span>
+                      </span>
+                    </span>
+                    <span
+                      className={`h-[3px] w-full transition-colors ${
+                        current ? "bg-blue-600" : done ? "bg-blue-200" : "bg-zinc-200"
+                      }`}
+                    />
+                  </button>
+                  {i < STEPS.length - 1 && <span className="w-2 shrink-0" />}
+                </li>
+              );
+            })}
+          </ol>
         </nav>
+
 
         {/* Body: editor rail + preview */}
         <div
