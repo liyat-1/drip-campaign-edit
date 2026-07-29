@@ -1,75 +1,64 @@
+## Goals
 
-## Goal
-
-Rebuild the three wizard steps (Preferences / Content / Promotion) so each one feels purposeful, adds the missing controls from the reference screenshots, and gets a nicer visual layout. Preview behaviour becomes channel-aware: text always shows the phone, email shows desktop/mobile toggle, promotion drops the side preview and renders inline under the editor.
+Bring the campaign wizard closer to the reference screenshots and to the "structured" builder's calmer layout. Preview appears the moment a channel is picked, promo preview lives in the preview column (not inline), email content editing is limited to editable blocks with a locked indicator on the rest, textarea tags render as coloured chips, and previews get the same desktop/mobile/inbox/dark modes as the structured builder.
 
 ## 1. Preferences step
 
-- Replace the 2-card channel picker with a proper "Message channel strategy" section supporting **four** options:
-  - `email` — Email Only
-  - `text` — Text Only
-  - `both` — Text + Email Together
-  - `text_email_fallback` — Text with Email Fallback
-- Keep them as compact selectable cards (2×2 grid) with icon + short description; the existing ChannelCard style, densified.
-- Regroup the rest into three clearly separated blocks with headings:
-  1. **Delivery** — sequence toggle, audience, start date, cut-off toggle + date
-  2. **Summary** — the emerald estimate card (unchanged, values react to new channels)
-- Wider single-column layout so the section headings breathe.
+- Once a channel is selected, the preview column immediately shows a preview matching that channel (text → phone with default SMS, email → placeholder "pick a design", both → tabbed preview).
+- Keep the four channel cards and rearrange delivery/summary blocks to match the structured builder's `RailSection` rhythm (light dividers, 12px section headings, less nesting).
 
 ## 2. Content step
 
-### Text content (shown when channel is `text`, `both`, or `text_email_fallback`)
+### Editability model
 
-- New two-panel layout inside the editor column:
-  - **Message** card: textarea + character counter + colourful, category-tinted merge-tag chips (name = indigo, dates = amber, hotel = emerald, loyalty = violet). Chips insert at caret.
-  - **Media** card (moved inline, no separate tab): drop zone + "Select file" button + preview thumbnail with remove, plus the yellow "strongly recommended" callout from the screenshot.
-  - **Tracked link** field.
-  - **Send test** card at the bottom.
-- The phone preview renders the image above the bubble when one is attached.
+- `EDITABLE_BLOCKS = ["body", "cta", "details"]`; `LOCKED_BLOCKS = ["header", "hero", "footer"]`.
+- Locked blocks appear in the accordion but are dimmed with a `Lock` icon, a "Set in template" hint, and clicking them does nothing (aria-disabled).
+- After picking a template, default open block = `body`.
+- Add small "Change design" button next to selected template card.
 
-### Email content (shown when channel is `email`, `both`, or `text_email_fallback`)
+### Text content
 
-- Keep the template picker + subject/preheader.
-- **Unlock header and hero editing.** Move them out of `LOCKED_BLOCKS` into the collapsible accordion so users can change logo/text/bg and hero image/height/overlay directly — same `BlockForm` mechanism used in the structured editor.
-- Add a small "Reset to design defaults" link that re-applies the chosen template.
+- Textarea replaced with a `TagTextArea`: a `contentEditable` div that renders each `{{token}}` as a coloured, non-editable chip (`firstName`, `checkoutDate`, `hotelName`…). Backspace deletes the whole chip. Insert-tag chips add the chip at the caret.
+- Media card keeps the drop zone but adds a "Select from recent files" strip with 4 sample thumbnails (`/src/assets`).
+- Layout mirrors the structured builder's `RailSection` (indexed section headers, single scroll rail).
 
-### Both / fallback
+### Email content
 
-- Two tabs at the top of the content step ("Text", "Email") — the editor swaps to the matching form. Preview column also swaps based on the active tab.
+- Left rail: 1 · Template, 2 · Subject & preheader, 3 · Editable sections (body/cta/details), 4 · Send test. Rail uses the same `RailSection` component visually.
+- Right column shows the email preview with a device switcher (Desktop / Mobile / Inbox / Dark) — same modes as the structured builder.
 
 ## 3. Promotion step
 
-- Expand the form with the fields from the screenshot:
-  - `Use promotion` toggle (gates the rest)
-  - Promo code + minimum nights dropdown (side-by-side)
-  - Discount percentage
-  - Offer tagline (short text)
-  - `Offer is valid between specific dates` toggle → date range
-- **Preview moves inline below the editor**: a promo banner card ("LIYAT, YOU UNLOCKED / THE BEST RATE 50% 🎉") built with CSS + the campaign's accent colour and hotel name. The right-side preview column is hidden on the promotion step.
+- Editor keeps the promo fields but the `PromoPreviewCard` moves into the preview column. The preview column is no longer hidden on this step; it shows the promo card (phone-framed if channel is text-only, plain card if email-only or both).
 
-## 4. Preview column behaviour
+## 4. Template picker
 
-- Preferences step: keep empty-state / summary card.
-- Content step: text → phone; email → desktop/mobile toggle.
-- Promotion step: hidden; editor takes full width and shows the promo card underneath.
+- Each thumbnail shows a light and dark variant (small stacked cards).
+- Add an "Edit design" secondary button next to "Use this design" that opens the picked template in the structured builder flow (`/structured` route) so users can customise header/hero/footer before applying. (For this iteration: opens `/structured` in a new tab; nothing persists back — noted in a small hint.)
 
-## 5. iPhone mockup refresh
+## 5. Preview column
 
-- Replace the current frame with a cleaner iPhone 15-style shell in `PhoneMockup.tsx`:
-  - Deeper titanium gradient rail, softer 4.2rem corner radius
-  - Slimmer Dynamic Island with subtle inner highlight
-  - Refined side buttons, crisper drop shadow, subtle screen inner ring
-- No API change — existing callers keep working.
+- Always visible in every step once a channel is selected.
+- Preferences: default preview based on channel (phone for text, empty card for email until template chosen).
+- Content: text → phone; email → device switcher (desktop / mobile / inbox / dark).
+- Promotion: renders `PromoPreviewCard` (phone-wrapped when text-only).
+
+## 6. Phone mockup polish
+
+- Refine `PhoneMockup.tsx`: thinner bezel, brighter titanium gradient, subtle screen glass reflection, cleaner Dynamic Island proportions, tighter home indicator.
+
+## 7. Structured spacing pass
+
+- Adopt the structured builder's paddings (`px-4 py-2.5` rail headers, `p-4` section bodies), 12px section titles with 11.5px hints, and the numbered chip in section headers. Applies to all three wizard steps.
 
 ## Technical notes
 
-- New channel type: `type Channel = "text" | "email" | "both" | "text_email_fallback"`. Helpers `hasText(channel)` / `hasEmail(channel)` drive step gating and preview.
-- `EDITABLE_BLOCKS` becomes `["header", "hero", "body", "cta", "details", "footer"]`; `LOCKED_BLOCKS` removed.
-- Text media state: `const [mediaUrl, setMediaUrl] = useState<string | null>(null)` populated via `URL.createObjectURL`; passed to `SmsPreview` as an optional `imageUrl` prop that renders above the bubble.
-- Promotion state additions: `promoEnabled`, `minNights`, `tagline`, `validRange` toggle + `validFrom`/`validTo`.
-- Promotion preview card: standalone component `PromoPreviewCard` — gradient using `campaign.theme.accent`, hotel name from `campaign.header.logoText`, tagline text overlay.
-- No backend changes; all state stays local to the wizard.
+- New `TagTextArea` component in `src/components/campaign/TagTextArea.tsx`. Stores plaintext with `{{token}}`; renders chips via contentEditable + MutationObserver-free re-render (re-render only when external `value` changes, not on each keystroke).
+- New `RailSection` reused from structured builder (extract to `src/components/editor/RailSection.tsx`).
+- `EmailPreviewSwitcher` component wrapping the four modes (desktop / mobile / inbox / dark) for reuse across wizard and structured builder.
+- `LOCKED_BLOCKS` render `<BlockForm>` disabled (wrap in `<fieldset disabled>` with overlay) rather than hiding, so users see what's set.
+- `PromoPreviewCard` accepts `framed` prop to render inside `PhoneMockup` when text-only.
 
 ## Out of scope
 
-- Actually sending texts/emails, persisting the campaign, or generating AI images for the promo banner.
+- Persisting campaign, actually sending, and syncing template edits back from `/structured` route.
