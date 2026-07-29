@@ -1341,6 +1341,11 @@ function PreviewHeader({
       <p className="flex min-w-0 items-center gap-2 truncate text-[11.5px] font-medium uppercase tracking-wider text-zinc-400">
         <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-emerald-500" />
         {label}
+        {showEmailModes && (
+          <span className="hidden normal-case tracking-normal text-zinc-400 xl:inline">
+            · click a highlighted section to edit — greyed areas are locked by the template
+          </span>
+        )}
       </p>
       {showEmailModes && (
         <div className="flex rounded-md bg-zinc-100 p-0.5">
