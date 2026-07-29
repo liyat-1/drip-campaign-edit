@@ -1609,7 +1609,7 @@ function MediaUploader({
               >
                 <img src={f.url} alt={f.name} className="block h-16 w-24 object-cover" />
                 {active && (
-                  <span className="absolute right-1 top-1 grid size-5 place-items-center rounded-full bg-zinc-900 text-white">
+                  <span className="absolute right-1 top-1 grid size-5 place-items-center rounded-full bg-blue-600 text-white">
                     <Check size={11} />
                   </span>
                 )}

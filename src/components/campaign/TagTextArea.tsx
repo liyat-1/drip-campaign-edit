@@ -116,7 +116,7 @@ export function TagTextArea({
         const text = e.clipboardData.getData("text/plain");
         document.execCommand("insertText", false, text);
       }}
-      className="w-full whitespace-pre-wrap break-words rounded-lg border border-zinc-200 bg-white px-3.5 py-3 text-[13.5px] leading-[1.55] text-zinc-900 outline-none transition-colors hover:border-zinc-300 focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10"
+      className="w-full whitespace-pre-wrap break-words rounded-md border border-zinc-200 bg-white px-3.5 py-3 text-[13.5px] leading-[1.55] text-zinc-900 outline-none transition-colors hover:border-zinc-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15"
       style={{ minHeight }}
       data-placeholder={placeholder}
     />
@@ -143,7 +143,7 @@ const TAG_TONES: Record<string, string> = {
 
 function chipHtml(tag: TagDef) {
   const tone = TAG_TONES[tag.tone] ?? TAG_TONES.amber;
-  return `<span contenteditable="false" data-token="${escapeAttr(tag.token)}" style="${tone}display:inline-block;padding:1px 8px;margin:0 1px;border-radius:6px;font-weight:600;font-size:12.5px;vertical-align:baseline;">${escapeText(tag.label)}</span>`;
+  return `<span contenteditable="false" data-token="${escapeAttr(tag.token)}" style="${tone}display:inline-block;padding:1px 8px;margin:0 1px;border-radius:3px;font-weight:600;font-size:12.5px;vertical-align:baseline;">${escapeText(tag.label)}</span>`;
 }
 
 function renderHtml(text: string, tags: TagDef[]) {

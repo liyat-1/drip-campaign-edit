@@ -119,7 +119,7 @@ export function TemplatePicker({
                         height={150}
                       />
                       {selected && (
-                        <span className="absolute right-2.5 top-2.5 grid size-6 place-items-center rounded-full bg-zinc-900 text-white">
+                        <span className="absolute right-2.5 top-2.5 grid size-6 place-items-center rounded-full bg-blue-600 text-white">
                           <Check size={13} />
                         </span>
                       )}
