@@ -102,35 +102,35 @@ const MERGE_TAGS: (TagDef & {
     label: "firstName",
     tone: "indigo",
     Icon: User,
-    chip: "border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-400",
+    chip: "bg-indigo-100 text-indigo-700 hover:bg-indigo-200",
   },
   {
     token: "{{last_name}}",
     label: "lastName",
     tone: "sky",
     Icon: User,
-    chip: "border-sky-200 bg-sky-50 text-sky-700 hover:border-sky-400",
+    chip: "bg-sky-100 text-sky-700 hover:bg-sky-200",
   },
   {
     token: "{{checkout_date}}",
     label: "checkoutDate",
     tone: "amber",
     Icon: Calendar,
-    chip: "border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-400",
+    chip: "bg-amber-100 text-amber-700 hover:bg-amber-200",
   },
   {
     token: "{{hotel}}",
     label: "hotelName",
     tone: "emerald",
     Icon: Building2,
-    chip: "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-400",
+    chip: "bg-emerald-100 text-emerald-700 hover:bg-emerald-200",
   },
   {
     token: "{{loyalty_tier}}",
     label: "loyaltyTier",
     tone: "violet",
     Icon: Sparkles,
-    chip: "border-violet-200 bg-violet-50 text-violet-700 hover:border-violet-400",
+    chip: "bg-violet-100 text-violet-700 hover:bg-violet-200",
   },
 ];
 
@@ -957,9 +957,9 @@ function ContentRail(props: {
                     <button
                       key={t.token}
                       onClick={() => insertToken(t.token)}
-                      className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] font-medium transition-colors ${t.chip}`}
+                      className={`px-2 py-1 text-[11.5px] font-semibold transition-colors ${t.chip}`}
                     >
-                      <t.Icon size={12} /> {t.label}
+                      {t.label}
                     </button>
                   ))}
                 </div>
@@ -1100,7 +1100,7 @@ function ContentRail(props: {
                   open={openBlock === id}
                   onToggle={() => setOpenBlock(openBlock === id ? null : id)}
                 >
-                  <BlockForm id={id} campaign={campaign} update={update} />
+                  <ContentBlockForm id={id} campaign={campaign} update={update} />
                 </BlockAccordion>
               ))}
             </div>
