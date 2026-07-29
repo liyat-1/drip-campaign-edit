@@ -11,7 +11,6 @@ import {
   Mail,
   Check,
   ChevronRight,
-  ChevronDown,
   Users,
   Gift,
   Coins,
@@ -1172,49 +1171,6 @@ function ContentRail(props: {
         </>
       )}
     </>
-  );
-}
-
-function BlockAccordion({
-  id,
-  label,
-  open,
-  onToggle,
-  children,
-}: {
-  id: BlockId;
-  label: string;
-  open: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="overflow-hidden rounded-md border border-zinc-200">
-      <button
-        onClick={onToggle}
-        aria-expanded={open}
-        aria-controls={`block-${id}`}
-        className={`flex w-full items-center justify-between px-3.5 py-2.5 text-left transition-colors ${
-          open ? "bg-blue-600 text-white" : "hover:bg-zinc-50"
-        }`}
-      >
-        <span className="flex items-center gap-2 text-[13px] font-medium">
-          <Pencil size={13} className={open ? "opacity-80" : "text-zinc-400"} />
-          {label}
-        </span>
-        <ChevronDown
-          size={15}
-          className={`transition-transform ${open ? "" : "-rotate-90"} ${
-            open ? "text-white/70" : "text-zinc-400"
-          }`}
-        />
-      </button>
-      {open && (
-        <div id={`block-${id}`} className="bg-white">
-          {children}
-        </div>
-      )}
-    </div>
   );
 }
 
