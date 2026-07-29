@@ -1,9 +1,9 @@
 import { Wifi, BatteryFull, SignalHigh } from "lucide-react";
 
 /**
- * iPhone 15-style frame: brushed-titanium rail, thin bezels, refined
- * Dynamic Island. Screen size and API are unchanged so every caller keeps
- * working — the previous frame is just visually upgraded.
+ * Refreshed iPhone 15 Pro-style frame: polished titanium rail with a warm
+ * highlight, extra-thin bezel, refined Dynamic Island and a subtle screen
+ * glass reflection. API unchanged.
  */
 export function PhoneMockup({
   children,
@@ -17,44 +17,40 @@ export function PhoneMockup({
   scale?: number;
   statusBar?: boolean;
   time?: string;
-  /** Optional app chrome rendered under the status bar (e.g. Messages header). */
   chrome?: React.ReactNode;
   contentClassName?: string;
 }) {
   const W = 393;
   const H = 812;
   return (
-    <div
-      className="relative"
-      style={{ width: W * scale, height: H * scale }}
-      aria-hidden={false}
-    >
+    <div className="relative" style={{ width: W * scale, height: H * scale }} aria-hidden={false}>
       <div
         className="absolute left-0 top-0 origin-top-left"
         style={{ width: W, height: H, transform: `scale(${scale})` }}
       >
-        {/* Outer titanium rail with brushed highlight */}
+        {/* Outer titanium rail */}
         <div
-          className="relative size-full rounded-[3.6rem] p-[3px] shadow-[0_50px_120px_-30px_rgba(9,9,11,0.55),0_20px_50px_-20px_rgba(9,9,11,0.45)]"
+          className="relative size-full rounded-[3.75rem] p-[2.5px] shadow-[0_60px_140px_-40px_rgba(9,9,11,0.6),0_25px_60px_-25px_rgba(9,9,11,0.5)]"
           style={{
             background:
-              "linear-gradient(145deg,#d4d4d8 0%,#71717a 22%,#3f3f46 50%,#71717a 78%,#d4d4d8 100%)",
+              "linear-gradient(150deg,#e4e4e7 0%,#a1a1aa 18%,#52525b 44%,#3f3f46 55%,#71717a 78%,#e4e4e7 100%)",
           }}
         >
-          {/* Inner rail shine */}
-          <div className="pointer-events-none absolute inset-[3px] rounded-[3.45rem] ring-1 ring-inset ring-white/10" />
+          {/* Rail highlight rings */}
+          <div className="pointer-events-none absolute inset-[2.5px] rounded-[3.6rem] ring-[1.5px] ring-inset ring-white/12" />
+          <div className="pointer-events-none absolute inset-[3.5px] rounded-[3.55rem] ring-[1px] ring-inset ring-black/30" />
 
-          {/* Side buttons */}
-          <span className="absolute -left-[4px] top-[118px] h-8 w-[4px] rounded-l-md bg-zinc-600" />
-          <span className="absolute -left-[4px] top-[168px] h-14 w-[4px] rounded-l-md bg-zinc-600" />
-          <span className="absolute -left-[4px] top-[236px] h-14 w-[4px] rounded-l-md bg-zinc-600" />
-          <span className="absolute -right-[4px] top-[204px] h-20 w-[4px] rounded-r-md bg-zinc-600" />
+          {/* Side buttons — thinner, slightly recessed */}
+          <span className="absolute -left-[3px] top-[122px] h-[30px] w-[3px] rounded-l-md bg-gradient-to-r from-zinc-400 to-zinc-700 shadow-[inset_-1px_0_0_rgba(0,0,0,0.4)]" />
+          <span className="absolute -left-[3px] top-[172px] h-14 w-[3px] rounded-l-md bg-gradient-to-r from-zinc-400 to-zinc-700 shadow-[inset_-1px_0_0_rgba(0,0,0,0.4)]" />
+          <span className="absolute -left-[3px] top-[240px] h-14 w-[3px] rounded-l-md bg-gradient-to-r from-zinc-400 to-zinc-700 shadow-[inset_-1px_0_0_rgba(0,0,0,0.4)]" />
+          <span className="absolute -right-[3px] top-[208px] h-24 w-[3px] rounded-r-md bg-gradient-to-l from-zinc-400 to-zinc-700 shadow-[inset_1px_0_0_rgba(0,0,0,0.4)]" />
 
           {/* Bezel */}
-          <div className="relative size-full overflow-hidden rounded-[3.35rem] bg-zinc-950 p-[9px]">
+          <div className="relative size-full overflow-hidden rounded-[3.5rem] bg-black p-[6px]">
             {/* Screen */}
             <div
-              className={`relative flex size-full flex-col overflow-hidden rounded-[2.8rem] ring-1 ring-inset ring-white/5 ${contentClassName}`}
+              className={`relative flex size-full flex-col overflow-hidden rounded-[3.05rem] ring-1 ring-inset ring-white/5 ${contentClassName}`}
             >
               {statusBar && (
                 <div className="relative z-20 flex h-[54px] shrink-0 items-end justify-between px-9 pb-1.5">
@@ -70,10 +66,21 @@ export function PhoneMockup({
               )}
 
               {/* Dynamic Island */}
-              <div className="pointer-events-none absolute left-1/2 top-[11px] z-30 h-[33px] w-[118px] -translate-x-1/2 rounded-full bg-black shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]">
-                <span className="absolute right-3.5 top-1/2 size-[8px] -translate-y-1/2 rounded-full bg-zinc-800 ring-1 ring-zinc-700/60" />
-                <span className="absolute left-4 top-1/2 size-[5px] -translate-y-1/2 rounded-full bg-zinc-800" />
+              <div className="pointer-events-none absolute left-1/2 top-[11px] z-30 h-[34px] w-[122px] -translate-x-1/2 rounded-full bg-black shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06),inset_0_1px_2px_rgba(255,255,255,0.04)]">
+                <span className="absolute right-3.5 top-1/2 size-[9px] -translate-y-1/2 rounded-full bg-[#0a0a0f] ring-[1.5px] ring-zinc-800/70">
+                  <span className="absolute inset-[2px] rounded-full bg-gradient-to-br from-zinc-700/60 to-transparent" />
+                </span>
+                <span className="absolute left-4 top-1/2 size-[6px] -translate-y-1/2 rounded-full bg-zinc-800/70" />
               </div>
+
+              {/* Subtle glass reflection */}
+              <div
+                className="pointer-events-none absolute inset-0 z-40 rounded-[3.05rem]"
+                style={{
+                  background:
+                    "linear-gradient(115deg,rgba(255,255,255,0.09) 0%,rgba(255,255,255,0) 22%,rgba(255,255,255,0) 78%,rgba(255,255,255,0.05) 100%)",
+                }}
+              />
 
               {chrome}
 
@@ -81,7 +88,7 @@ export function PhoneMockup({
 
               {/* Home indicator */}
               <div className="relative z-20 flex h-6 shrink-0 items-center justify-center">
-                <span className="h-[5px] w-[134px] rounded-full bg-zinc-900/80" />
+                <span className="h-[5px] w-[134px] rounded-full bg-zinc-900/85" />
               </div>
             </div>
           </div>
