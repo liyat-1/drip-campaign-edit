@@ -1075,24 +1075,46 @@ function ContentRail(props: {
           <RailSection
             index={2}
             title="Content sections"
-            hint="Body, button & details are editable"
+            hint="Pick one — or click it in the preview"
             open={!!openRail[2]}
             onToggle={() => toggle(2)}
           >
             <div className="space-y-1 p-3">
-              {EDITABLE_BLOCKS.map((id) => (
-                <BlockAccordion
-                  key={id}
-                  id={id}
-                  label={BLOCK_LABELS[id]}
-                  open={openBlock === id}
-                  onToggle={() => setOpenBlock(openBlock === id ? null : id)}
-                >
-                  <ContentBlockForm id={id} campaign={campaign} update={update} />
-                </BlockAccordion>
-              ))}
+              {EDITABLE_BLOCKS.map((id) => {
+                const active = openBlock === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setOpenBlock(active ? null : id)}
+                    aria-pressed={active}
+                    className={`flex w-full items-center justify-between gap-3 border px-3 py-2.5 text-left transition-colors ${
+                      active
+                        ? "border-blue-600 bg-blue-50/70"
+                        : "border-zinc-200 hover:border-zinc-400"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Pencil size={13} className={active ? "text-blue-600" : "text-zinc-400"} />
+                      <span
+                        className={`text-[13px] font-medium ${
+                          active ? "text-blue-700" : "text-zinc-700"
+                        }`}
+                      >
+                        {BLOCK_LABELS[id]}
+                      </span>
+                    </span>
+                    <span className="text-[11px] text-zinc-400">
+                      {active ? "Editing" : "Edit"}
+                    </span>
+                  </button>
+                );
+              })}
+              <p className="px-1 pt-1.5 text-[11.5px] leading-relaxed text-zinc-400">
+                The editor opens next to the section in the preview, just like the template studio.
+              </p>
             </div>
           </RailSection>
+
 
           <RailSection
             index={3}
