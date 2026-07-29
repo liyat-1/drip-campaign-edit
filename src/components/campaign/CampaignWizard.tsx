@@ -844,7 +844,7 @@ function ContentRail(props: {
       | ((t: string) => void)
       | undefined;
     if (fn) fn(token);
-    else props.setMessage((m) => `${m} ${token}`.trim());
+    else props.setMessage(`${props.message} ${token}`.trim());
   };
 
   return (
