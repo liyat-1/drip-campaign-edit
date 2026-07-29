@@ -312,10 +312,18 @@ export function EmailPreview({
                 .map((s) => (
                   <span
                     key={s.key}
-                    className="grid size-7 place-items-center rounded-full"
-                    style={{ background: dark ? "#2a2c31" : "#111827" }}
+                    className="grid size-7 place-items-center"
+                    style={{
+                      background: dark ? "#2a2c31" : c.footer.socialBg,
+                      borderRadius: c.footer.socialRadius,
+                    }}
                   >
-                    <svg viewBox="0 0 24 24" className="size-3.5 fill-white" aria-hidden>
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="size-3.5"
+                      style={{ fill: dark ? "#e5e7eb" : c.footer.socialColor }}
+                      aria-hidden
+                    >
                       <path d={SOCIAL_PATHS[s.key]} />
                     </svg>
                   </span>
