@@ -375,6 +375,27 @@ function FooterForm({ campaign: c, update }: Props) {
         </div>
       </Group>
       <Group title="Social links">
+        <div className="grid grid-cols-3 gap-2">
+          <ColorField label="Icon bg" value={c.footer.socialBg} onChange={(v) => update((d) => void (d.footer.socialBg = v))} />
+          <ColorField label="Icon" value={c.footer.socialColor} onChange={(v) => update((d) => void (d.footer.socialColor = v))} />
+          <SliderField label="Radius" value={c.footer.socialRadius} min={0} max={20} onChange={(v) => update((d) => void (d.footer.socialRadius = v))} />
+        </div>
+        {/* Live preview of the social icon styling */}
+        <div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5">
+          {c.footer.socials
+            .filter((s) => s.enabled)
+            .slice(0, 5)
+            .map((s) => (
+              <span
+                key={s.key}
+                className="grid size-7 place-items-center"
+                style={{ background: c.footer.socialBg, borderRadius: c.footer.socialRadius }}
+              >
+                <SocialIcon skey={s.key} color={c.footer.socialColor} />
+              </span>
+            ))}
+          <span className="ml-auto text-[11px] text-zinc-400">Preview</span>
+        </div>
         {c.footer.socials.map((s) => (
           <div key={s.key} className="space-y-1.5 rounded-md border border-zinc-200 p-2">
             <ToggleRow
