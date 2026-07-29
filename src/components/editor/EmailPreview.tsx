@@ -33,6 +33,7 @@ function Block({
   interactive,
   children,
   accent,
+  locked = false,
 }: {
   id: BlockId;
   selected: BlockId | null;
@@ -41,9 +42,27 @@ function Block({
   interactive?: boolean;
   children: React.ReactNode;
   accent: string;
+  locked?: boolean;
 }) {
   const active = selected === id;
   if (!interactive) return <div>{children}</div>;
+
+  if (locked) {
+    return (
+      <div data-block={id} aria-disabled className="group relative cursor-not-allowed select-none">
+        <div className="opacity-45 grayscale">{children}</div>
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-10 bg-zinc-500/5"
+          style={{ boxShadow: "inset 0 0 0 1px rgba(113,113,122,0.35)" }}
+        />
+        <span className="pointer-events-none absolute right-2 top-2 z-20 flex items-center gap-1 bg-zinc-900/80 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-white opacity-0 transition-opacity group-hover:opacity-100">
+          Locked · {label}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div
       data-block={id}
@@ -70,7 +89,7 @@ function Block({
       />
       {active && (
         <span
-          className="absolute left-0 top-0 z-20 -translate-y-full rounded-t px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-white"
+          className="absolute left-0 top-0 z-20 -translate-y-full px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-white"
           style={{ background: accent }}
         >
           {label}
@@ -80,6 +99,7 @@ function Block({
     </div>
   );
 }
+
 
 function Editable({
   html,
@@ -131,6 +151,7 @@ export function EmailPreview({
   update,
   width,
   dark = false,
+  lockedBlocks,
 }: {
   campaign: Campaign;
   selected?: BlockId | null;
@@ -140,10 +161,13 @@ export function EmailPreview({
   update?: (fn: (draft: Campaign) => void) => void;
   width?: number;
   dark?: boolean;
+  /** Blocks that belong to the template shell and cannot be edited here. */
+  lockedBlocks?: BlockId[];
 }) {
   const accent = c.theme.accent;
   const edit = (fn: (d: Campaign) => void) => update?.(fn);
-  const canEdit = inlineEdit && !!update;
+  const isLocked = (id: BlockId) => !!lockedBlocks?.includes(id);
+  const canEditBlock = (id: BlockId) => inlineEdit && !!update && !isLocked(id);
 
   return (
     <div
@@ -157,7 +181,7 @@ export function EmailPreview({
       }}
     >
       {c.header.visible && (
-        <Block id="header" label="Header" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent}>
+        <Block id="header" label="Header" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent} locked={isLocked("header")}>
           <div
             className="flex items-center"
             style={{
@@ -189,7 +213,7 @@ export function EmailPreview({
       )}
 
       {c.hero.visible && (
-        <Block id="hero" label="Hero image" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent}>
+        <Block id="hero" label="Hero image" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent} locked={isLocked("hero")}>
           <div
             className="relative overflow-hidden bg-zinc-100"
             style={{ height: c.hero.height, borderRadius: c.hero.radius }}
@@ -212,11 +236,11 @@ export function EmailPreview({
       )}
 
       {c.body.visible && (
-        <Block id="body" label="Content" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent}>
+        <Block id="body" label="Content" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent} locked={isLocked("body")}>
           <div className="px-8 pb-2 pt-8" style={{ textAlign: c.body.align }}>
             <Editable
               as="h1"
-              editable={canEdit}
+              editable={canEditBlock("body")}
               html={c.body.heading}
               onCommit={(v) => edit((d) => void (d.body.heading = v))}
               className="font-semibold leading-tight tracking-tight"
@@ -231,7 +255,7 @@ export function EmailPreview({
                 <Editable
                   key={p.id}
                   as="p"
-                  editable={canEdit}
+                  editable={canEditBlock("body")}
                   html={p.text}
                   onCommit={(v) =>
                     edit((d) => {
@@ -252,7 +276,7 @@ export function EmailPreview({
       )}
 
       {c.cta.visible && (
-        <Block id="cta" label="Button" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent}>
+        <Block id="cta" label="Button" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent} locked={isLocked("cta")}>
           <div className="px-8 pb-8 pt-6" style={{ textAlign: c.cta.align }}>
             <span
               className="inline-flex items-center justify-center font-semibold"
@@ -267,7 +291,7 @@ export function EmailPreview({
             >
               <Editable
                 as="span"
-                editable={canEdit}
+                editable={canEditBlock("cta")}
                 html={c.cta.label}
                 onCommit={(v) => edit((d) => void (d.cta.label = v))}
               />
@@ -277,7 +301,7 @@ export function EmailPreview({
       )}
 
       {c.details.visible && (
-        <Block id="details" label="Detail grid" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent}>
+        <Block id="details" label="Detail grid" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent} locked={isLocked("details")}>
           <div
             className="grid border-t border-black/5 px-8 py-7 text-left"
             style={{
@@ -301,7 +325,7 @@ export function EmailPreview({
       )}
 
       {c.footer.visible && (
-        <Block id="footer" label="Footer" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent}>
+        <Block id="footer" label="Footer" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent} locked={isLocked("footer")}>
           <div
             className="border-t border-black/5 px-8 py-7 text-center"
             style={{ background: dark ? "#1b1c1f" : c.footer.bg }}

@@ -38,7 +38,7 @@ export function TemplatePicker({
       <div
         role="dialog"
         aria-label="Choose email design"
-        className="flex max-h-[92dvh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+        className="flex max-h-[92dvh] w-full max-w-5xl flex-col overflow-hidden rounded-md bg-white shadow-2xl"
       >
         <header className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-b border-zinc-100 px-6 py-4">
           <div className="min-w-0">
@@ -51,7 +51,7 @@ export function TemplatePicker({
           <button
             onClick={onClose}
             aria-label="Close template picker"
-            className="grid size-8 place-items-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+            className="grid size-8 place-items-center rounded-md text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
           >
             <X size={17} />
           </button>
@@ -67,10 +67,10 @@ export function TemplatePicker({
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search designs…"
                   aria-label="Search designs"
-                  className="h-10 w-full rounded-lg border border-zinc-200 pl-9 pr-3 text-[13px] outline-none transition-colors focus:border-zinc-900"
+                  className="h-10 w-full rounded-md border border-zinc-200 pl-9 pr-3 text-[13px] outline-none transition-colors focus:border-zinc-900"
                 />
               </div>
-              <div className="flex rounded-lg bg-zinc-100 p-0.5">
+              <div className="flex rounded-md bg-zinc-100 p-0.5">
                 {(
                   [
                     { id: "light" as const, Icon: Sun, label: "Light" },
@@ -103,7 +103,7 @@ export function TemplatePicker({
                     key={t.id}
                     onClick={() => setHighlight(t.id)}
                     aria-pressed={selected}
-                    className={`group overflow-hidden rounded-xl border text-left transition-all ${
+                    className={`group overflow-hidden rounded-md border text-left transition-all ${
                       selected
                         ? "border-zinc-900 ring-2 ring-zinc-900/10"
                         : "border-zinc-200 hover:border-zinc-400"
@@ -119,7 +119,7 @@ export function TemplatePicker({
                         height={150}
                       />
                       {selected && (
-                        <span className="absolute right-2.5 top-2.5 grid size-6 place-items-center rounded-full bg-zinc-900 text-white">
+                        <span className="absolute right-2.5 top-2.5 grid size-6 place-items-center rounded-full bg-blue-600 text-white">
                           <Check size={13} />
                         </span>
                       )}
@@ -161,20 +161,20 @@ export function TemplatePicker({
           <Link
             to="/structured"
             target="_blank"
-            className="flex h-10 items-center gap-1.5 rounded-lg px-3 text-[12.5px] font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+            className="flex h-10 items-center gap-1.5 rounded-md px-3 text-[12.5px] font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
           >
             <ExternalLink size={13} /> Edit design in template studio
           </Link>
           <div className="flex items-center gap-2.5">
             <button
               onClick={onClose}
-              className="h-10 rounded-lg border border-zinc-200 px-5 text-[13px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+              className="h-10 rounded-md border border-zinc-200 px-5 text-[13px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
             >
               Cancel
             </button>
             <button
               onClick={() => onApply(active.id, active.build())}
-              className="h-10 rounded-lg bg-zinc-900 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-zinc-800"
+              className="h-10 rounded-md bg-blue-600 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700"
             >
               Use this design
             </button>

@@ -11,7 +11,6 @@ import {
   Mail,
   Check,
   ChevronRight,
-  ChevronDown,
   Users,
   Gift,
   Coins,
@@ -23,10 +22,6 @@ import {
   Upload,
   AlertTriangle,
   Trash2,
-  User,
-  Calendar,
-  Building2,
-  Sparkles,
   BadgePercent,
   Repeat,
   Split,
@@ -36,11 +31,13 @@ import {
   FileText,
 } from "lucide-react";
 import { EmailPreview, type BlockId } from "../editor/EmailPreview";
-import { BLOCK_LABELS, BlockForm } from "../editor/BlockForms";
+import { BLOCK_LABELS } from "../editor/BlockForms";
 import { PhoneMockup } from "../editor/PhoneMockup";
 import { SmsPreview } from "../editor/SmsPreview";
 import { InboxPreview } from "../editor/InboxPreview";
 import { RailSection } from "../editor/RailSection";
+import { FloatingCard, useAnchorRect } from "../editor/FloatingEditor";
+import { ContentBlockForm } from "./ContentBlockForm";
 import { Select } from "../editor/Select";
 import { Field, TextArea, TextInput, ToggleRow } from "../editor/controls";
 import { ScaledEmail } from "./ScaledEmail";
@@ -91,44 +88,36 @@ const MIN_NIGHTS = [
   { value: "7", label: "7 nights" },
 ];
 
-const MERGE_TAGS: (TagDef & {
-  Icon: React.ComponentType<{ size?: number; className?: string }>;
-  chip: string;
-})[] = [
+const MERGE_TAGS: (TagDef & { chip: string })[] = [
   {
     token: "{{first_name}}",
     label: "firstName",
     tone: "indigo",
-    Icon: User,
-    chip: "border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-400",
+    chip: "bg-indigo-100 text-indigo-700 hover:bg-indigo-200",
   },
   {
     token: "{{last_name}}",
     label: "lastName",
     tone: "sky",
-    Icon: User,
-    chip: "border-sky-200 bg-sky-50 text-sky-700 hover:border-sky-400",
+    chip: "bg-sky-100 text-sky-700 hover:bg-sky-200",
   },
   {
     token: "{{checkout_date}}",
     label: "checkoutDate",
     tone: "amber",
-    Icon: Calendar,
-    chip: "border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-400",
+    chip: "bg-amber-100 text-amber-700 hover:bg-amber-200",
   },
   {
     token: "{{hotel}}",
     label: "hotelName",
     tone: "emerald",
-    Icon: Building2,
-    chip: "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-400",
+    chip: "bg-emerald-100 text-emerald-700 hover:bg-emerald-200",
   },
   {
     token: "{{loyalty_tier}}",
     label: "loyaltyTier",
     tone: "violet",
-    Icon: Sparkles,
-    chip: "border-violet-200 bg-violet-50 text-violet-700 hover:border-violet-400",
+    chip: "bg-violet-100 text-violet-700 hover:bg-violet-200",
   },
 ];
 
@@ -208,6 +197,21 @@ export function CampaignWizard() {
   const activeTab: "text" | "email" =
     channel === "text" ? "text" : channel === "email" ? "email" : contentTab;
 
+  /* Selecting a content block in the email preview opens a floating editor
+   * anchored to it — same mechanic as the template studio. */
+  const emailEditing =
+    created && step === "content" && activeTab === "email" && templateReady && emailMode !== "inbox";
+  const floatingBlock =
+    emailEditing && openBlock && EDITABLE_BLOCKS.includes(openBlock) ? openBlock : null;
+  const anchor = useAnchorRect(floatingBlock, !!floatingBlock, [
+    campaign,
+    emailMode,
+    step,
+    expanded,
+  ]);
+
+
+
   /* ---------------- Step 0 · name the campaign ---------------- */
   if (!created) {
     return (
@@ -219,7 +223,7 @@ export function CampaignWizard() {
             update((d) => void (d.meta.name = draftName.trim()));
             setCreated(true);
           }}
-          className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+          className="w-full max-w-md overflow-hidden rounded-md bg-white shadow-2xl"
         >
           <div className="flex items-start justify-between gap-3 px-6 pb-4 pt-5">
             <div>
@@ -231,7 +235,7 @@ export function CampaignWizard() {
             <Link
               to="/"
               aria-label="Cancel"
-              className="grid size-8 place-items-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+              className="grid size-8 place-items-center rounded-md text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
             >
               <X size={17} />
             </Link>
@@ -244,13 +248,13 @@ export function CampaignWizard() {
           <div className="flex items-center justify-end gap-2.5 px-6 py-4">
             <Link
               to="/"
-              className="grid h-10 place-items-center rounded-lg border border-zinc-200 px-5 text-[13px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+              className="grid h-10 place-items-center rounded-md border border-zinc-200 px-5 text-[13px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
             >
               Cancel
             </Link>
             <button
               type="submit"
-              className="h-10 rounded-lg bg-zinc-900 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-zinc-800"
+              className="h-10 rounded-md bg-blue-600 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700"
             >
               Continue
             </button>
@@ -264,7 +268,7 @@ export function CampaignWizard() {
   if (minimized) {
     return (
       <div className="grid min-h-dvh place-items-end bg-zinc-900/70 p-4 font-sans">
-        <div className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-2xl">
+        <div className="flex items-center gap-3 rounded-md border border-zinc-200 bg-white px-4 py-3 shadow-2xl">
           <Pencil size={15} className="text-zinc-400" />
           <div className="flex flex-col">
             <input
@@ -280,7 +284,7 @@ export function CampaignWizard() {
           <button
             onClick={() => setMinimized(false)}
             aria-label="Resume editor"
-            className="grid size-9 place-items-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+            className="grid size-9 place-items-center rounded-md text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
           >
             <Maximize2 size={15} />
           </button>
@@ -290,7 +294,7 @@ export function CampaignWizard() {
   }
 
   const chromeBtn =
-    "grid size-8 place-items-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-30";
+    "grid size-8 place-items-center rounded-md text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-30";
 
   const stepIndex = STEPS.findIndex((s) => s.id === step);
   const canLeavePreferences = channel !== null;
@@ -306,7 +310,7 @@ export function CampaignWizard() {
         role="dialog"
         aria-label="Create drip campaign"
         className={`flex min-h-0 flex-1 flex-col overflow-hidden bg-zinc-100 shadow-2xl ${
-          expanded ? "" : "md:rounded-2xl md:border md:border-zinc-300"
+          expanded ? "" : "md:rounded-md md:border md:border-zinc-300"
         }`}
       >
         {/* Chrome */}
@@ -316,7 +320,7 @@ export function CampaignWizard() {
               value={campaign.meta.name}
               aria-label="Campaign name"
               onChange={(e) => update((d) => void (d.meta.name = e.target.value))}
-              className="min-w-0 max-w-[20rem] flex-1 truncate rounded-lg px-2 py-1.5 text-[14px] font-semibold outline-none transition-colors hover:bg-zinc-100 focus:bg-zinc-100"
+              className="min-w-0 max-w-[20rem] flex-1 truncate rounded-md px-2 py-1.5 text-[14px] font-semibold outline-none transition-colors hover:bg-zinc-100 focus:bg-zinc-100"
             />
             {channel && (
               <span className="hidden shrink-0 items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-1 text-[11px] font-medium text-zinc-600 sm:flex">
@@ -336,7 +340,7 @@ export function CampaignWizard() {
           <div className="flex shrink-0 items-center gap-1">
             <button
               onClick={() => notify("Draft saved")}
-              className="mr-1 hidden h-8 items-center rounded-lg border border-zinc-200 px-3 text-[12.5px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50 sm:flex"
+              className="mr-1 hidden h-8 items-center rounded-md border border-zinc-200 px-3 text-[12.5px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50 sm:flex"
             >
               Save changes
             </button>
@@ -358,36 +362,59 @@ export function CampaignWizard() {
           </div>
         </header>
 
-        {/* Step nav */}
+        {/* Step rail — connected progress track */}
         <nav
           aria-label="Campaign steps"
-          className="flex shrink-0 items-center gap-1 border-b border-zinc-200 bg-white px-3 pb-2 sm:px-4"
+          className="shrink-0 border-b border-zinc-200 bg-white px-3 pb-3 pt-1 sm:px-4"
         >
-          {STEPS.map((s, i) => {
-            const locked = s.id !== "preferences" && !canLeavePreferences;
-            const done = i < stepIndex;
-            return (
-              <button
-                key={s.id}
-                disabled={locked}
-                onClick={() => setStep(s.id)}
-                aria-current={step === s.id}
-                className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors disabled:opacity-40 ${
-                  step === s.id ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-100"
-                }`}
-              >
-                <span
-                  className={`grid size-5 place-items-center rounded-full text-[10.5px] font-semibold ${
-                    step === s.id ? "bg-white/20" : done ? "bg-emerald-100 text-emerald-700" : "bg-zinc-100"
-                  }`}
-                >
-                  {done ? <Check size={11} /> : i + 1}
-                </span>
-                {s.label}
-              </button>
-            );
-          })}
+          <ol className="flex items-stretch gap-0">
+            {STEPS.map((s, i) => {
+              const locked = s.id !== "preferences" && !canLeavePreferences;
+              const done = i < stepIndex;
+              const current = step === s.id;
+              return (
+                <li key={s.id} className="flex min-w-0 flex-1 items-center">
+                  <button
+                    disabled={locked}
+                    onClick={() => setStep(s.id)}
+                    aria-current={current ? "step" : undefined}
+                    className="group flex min-w-0 flex-1 flex-col gap-2 text-left disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span
+                        className={`grid size-[22px] shrink-0 place-items-center text-[11px] font-semibold transition-colors ${
+                          current
+                            ? "bg-blue-600 text-white"
+                            : done
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-zinc-100 text-zinc-500"
+                        }`}
+                      >
+                        {done ? <Check size={12} /> : i + 1}
+                      </span>
+                      <span className="min-w-0">
+                        <span
+                          className={`block truncate text-[12.5px] font-semibold ${
+                            current ? "text-zinc-900" : "text-zinc-500"
+                          }`}
+                        >
+                          {s.label}
+                        </span>
+                      </span>
+                    </span>
+                    <span
+                      className={`h-[3px] w-full transition-colors ${
+                        current ? "bg-blue-600" : done ? "bg-blue-200" : "bg-zinc-200"
+                      }`}
+                    />
+                  </button>
+                  {i < STEPS.length - 1 && <span className="w-2 shrink-0" />}
+                </li>
+              );
+            })}
+          </ol>
         </nav>
+
 
         {/* Body: editor rail + preview */}
         <div
@@ -540,49 +567,48 @@ export function CampaignWizard() {
                   ) : emailMode === "mobile" ? (
                     <div className="flex justify-center">
                       <PhoneMockup scale={0.78}>
-                        <EmailPreview campaign={campaign} interactive={false} width={373} />
+                        <EmailPreview
+                          campaign={campaign}
+                          interactive
+                          inlineEdit
+                          update={update}
+                          selected={openBlock}
+                          onSelect={setOpenBlock}
+                          lockedBlocks={LOCKED_BLOCKS}
+                          width={373}
+                        />
                       </PhoneMockup>
                     </div>
                   ) : (
                     <EmailPreview
                       campaign={campaign}
-                      interactive={false}
+                      interactive
+                      inlineEdit
+                      update={update}
+                      selected={openBlock}
+                      onSelect={setOpenBlock}
+                      lockedBlocks={LOCKED_BLOCKS}
                       width={600}
                       dark={emailMode === "dark"}
                     />
                   ))}
 
-                {/* Promotion preview lives in the preview column */}
+                {/* Promotion preview — a plain, larger card (no device frame) */}
                 {step === "promotion" && (
                   <div className="flex justify-center">
-                    {hasText(channel) && !hasEmail(channel) ? (
-                      <PhoneMockup scale={0.8}>
-                        <div className="p-4">
-                          <PromoPreviewCard
-                            accent={campaign.theme.accent}
-                            hotel={campaign.footer.company || campaign.header.logoText}
-                            firstName="Liyat"
-                            tagline={tagline}
-                            discount={discount}
-                            enabled={promoOn}
-                            compact
-                          />
-                        </div>
-                      </PhoneMockup>
-                    ) : (
-                      <div className="w-full max-w-md">
-                        <PromoPreviewCard
-                          accent={campaign.theme.accent}
-                          hotel={campaign.footer.company || campaign.header.logoText}
-                          firstName="Liyat"
-                          tagline={tagline}
-                          discount={discount}
-                          enabled={promoOn}
-                        />
-                      </div>
-                    )}
+                    <div className="w-full max-w-lg">
+                      <PromoPreviewCard
+                        accent={campaign.theme.accent}
+                        hotel={campaign.footer.company || campaign.header.logoText}
+                        firstName="Liyat"
+                        tagline={tagline}
+                        discount={discount}
+                        enabled={promoOn}
+                      />
+                    </div>
                   </div>
                 )}
+
               </div>
             </section>
           )}
@@ -601,7 +627,7 @@ export function CampaignWizard() {
             {stepIndex > 0 && (
               <button
                 onClick={() => setStep(STEPS[stepIndex - 1].id)}
-                className="h-10 rounded-lg border border-zinc-200 px-5 text-[13px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+                className="h-10 rounded-md border border-zinc-200 px-5 text-[13px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
               >
                 Back
               </button>
@@ -615,13 +641,24 @@ export function CampaignWizard() {
                 if (stepIndex === STEPS.length - 1) return notify("Campaign scheduled");
                 setStep(STEPS[stepIndex + 1].id);
               }}
-              className="h-10 rounded-lg bg-zinc-900 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
+              className="h-10 rounded-md bg-blue-600 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {stepIndex === STEPS.length - 1 ? "Schedule campaign" : "Next"}
             </button>
           </div>
         </footer>
       </div>
+
+      {floatingBlock && (
+        <FloatingCard
+          anchor={anchor}
+          title={`Editing · ${BLOCK_LABELS[floatingBlock]}`}
+          subtitle="Campaign content — the template shell stays locked"
+          onClose={() => setOpenBlock(null)}
+        >
+          <ContentBlockForm id={floatingBlock} campaign={campaign} update={update} />
+        </FloatingCard>
+      )}
 
       <TemplatePicker
         open={picker}
@@ -762,7 +799,7 @@ function PreferencesRail(props: {
         onToggle={() => toggle(3)}
       >
         <div className="p-4">
-          <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-5">
+          <div className="rounded-md border border-emerald-100 bg-emerald-50/70 p-5">
             <div className="flex items-center gap-3">
               <CalendarCheck2 size={22} className="text-emerald-600" />
               <div>
@@ -851,7 +888,7 @@ function ContentRail(props: {
     <>
       {showTabs && (
         <div className="border-b border-zinc-100 p-3">
-          <div className="flex rounded-lg bg-zinc-100 p-1">
+          <div className="flex rounded-md bg-zinc-100 p-1">
             {(
               [
                 { id: "text" as const, Icon: MessageSquare, label: "Text content" },
@@ -907,9 +944,9 @@ function ContentRail(props: {
                     <button
                       key={t.token}
                       onClick={() => insertToken(t.token)}
-                      className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] font-medium transition-colors ${t.chip}`}
+                      className={`px-2 py-1 text-[11.5px] font-semibold transition-colors ${t.chip}`}
                     >
-                      <t.Icon size={12} /> {t.label}
+                      {t.label}
                     </button>
                   ))}
                 </div>
@@ -958,7 +995,7 @@ function ContentRail(props: {
                   />
                   <button
                     onClick={() => props.onTest("text")}
-                    className="h-10 shrink-0 rounded-lg border border-zinc-200 px-4 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900"
+                    className="h-10 shrink-0 rounded-md border border-zinc-200 px-4 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900"
                   >
                     Send test
                   </button>
@@ -971,7 +1008,7 @@ function ContentRail(props: {
 
       {activeTab === "email" && hasEmail(channel) && templateId === null && (
         <div className="p-4">
-          <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-center">
+          <div className="rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-6 text-center">
             <span className="mx-auto grid size-11 place-items-center rounded-full bg-white text-zinc-500 ring-1 ring-zinc-200">
               <LayoutTemplate size={19} />
             </span>
@@ -984,7 +1021,7 @@ function ContentRail(props: {
             </p>
             <button
               onClick={openPicker}
-              className="mt-4 h-10 rounded-lg bg-zinc-900 px-5 text-[13px] font-semibold text-white transition-colors hover:bg-zinc-800"
+              className="mt-4 h-10 rounded-md bg-blue-600 px-5 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700"
             >
               Choose a design
             </button>
@@ -1002,7 +1039,7 @@ function ContentRail(props: {
             onToggle={() => toggle(1)}
           >
             <div className="space-y-4 p-4">
-              <div className="flex items-center gap-3 rounded-xl border border-zinc-200 p-3">
+              <div className="flex items-center gap-3 rounded-md border border-zinc-200 p-3">
                 <ScaledEmail campaign={campaign} width={92} height={66} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-semibold text-zinc-900">
@@ -1012,7 +1049,7 @@ function ContentRail(props: {
                 </div>
                 <button
                   onClick={openPicker}
-                  className="flex h-9 shrink-0 items-center gap-1 rounded-lg border border-zinc-200 px-3 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900"
+                  className="flex h-9 shrink-0 items-center gap-1 rounded-md border border-zinc-200 px-3 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900"
                 >
                   Change <ChevronRight size={14} />
                 </button>
@@ -1037,24 +1074,46 @@ function ContentRail(props: {
           <RailSection
             index={2}
             title="Content sections"
-            hint="Body, button & details are editable"
+            hint="Pick one — or click it in the preview"
             open={!!openRail[2]}
             onToggle={() => toggle(2)}
           >
             <div className="space-y-1 p-3">
-              {EDITABLE_BLOCKS.map((id) => (
-                <BlockAccordion
-                  key={id}
-                  id={id}
-                  label={BLOCK_LABELS[id]}
-                  open={openBlock === id}
-                  onToggle={() => setOpenBlock(openBlock === id ? null : id)}
-                >
-                  <BlockForm id={id} campaign={campaign} update={update} />
-                </BlockAccordion>
-              ))}
+              {EDITABLE_BLOCKS.map((id) => {
+                const active = openBlock === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setOpenBlock(active ? null : id)}
+                    aria-pressed={active}
+                    className={`flex w-full items-center justify-between gap-3 border px-3 py-2.5 text-left transition-colors ${
+                      active
+                        ? "border-blue-600 bg-blue-50/70"
+                        : "border-zinc-200 hover:border-zinc-400"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Pencil size={13} className={active ? "text-blue-600" : "text-zinc-400"} />
+                      <span
+                        className={`text-[13px] font-medium ${
+                          active ? "text-blue-700" : "text-zinc-700"
+                        }`}
+                      >
+                        {BLOCK_LABELS[id]}
+                      </span>
+                    </span>
+                    <span className="text-[11px] text-zinc-400">
+                      {active ? "Editing" : "Edit"}
+                    </span>
+                  </button>
+                );
+              })}
+              <p className="px-1 pt-1.5 text-[11.5px] leading-relaxed text-zinc-400">
+                The editor opens next to the section in the preview, just like the template studio.
+              </p>
             </div>
           </RailSection>
+
 
           <RailSection
             index={3}
@@ -1067,7 +1126,7 @@ function ContentRail(props: {
               {LOCKED_BLOCKS.map((id) => (
                 <div
                   key={id}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-dashed border-zinc-200 bg-zinc-50/60 px-3 py-2.5"
+                  className="flex items-center justify-between gap-3 rounded-md border border-dashed border-zinc-200 bg-zinc-50/60 px-3 py-2.5"
                 >
                   <span className="flex items-center gap-2.5">
                     <Lock size={13} className="text-zinc-400" />
@@ -1101,7 +1160,7 @@ function ContentRail(props: {
                   />
                   <button
                     onClick={() => props.onTest("email")}
-                    className="h-10 shrink-0 rounded-lg border border-zinc-200 px-4 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900"
+                    className="h-10 shrink-0 rounded-md border border-zinc-200 px-4 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900"
                   >
                     Send test
                   </button>
@@ -1112,49 +1171,6 @@ function ContentRail(props: {
         </>
       )}
     </>
-  );
-}
-
-function BlockAccordion({
-  id,
-  label,
-  open,
-  onToggle,
-  children,
-}: {
-  id: BlockId;
-  label: string;
-  open: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="overflow-hidden rounded-lg border border-zinc-200">
-      <button
-        onClick={onToggle}
-        aria-expanded={open}
-        aria-controls={`block-${id}`}
-        className={`flex w-full items-center justify-between px-3.5 py-2.5 text-left transition-colors ${
-          open ? "bg-zinc-900 text-white" : "hover:bg-zinc-50"
-        }`}
-      >
-        <span className="flex items-center gap-2 text-[13px] font-medium">
-          <Pencil size={13} className={open ? "opacity-80" : "text-zinc-400"} />
-          {label}
-        </span>
-        <ChevronDown
-          size={15}
-          className={`transition-transform ${open ? "" : "-rotate-90"} ${
-            open ? "text-white/70" : "text-zinc-400"
-          }`}
-        />
-      </button>
-      {open && (
-        <div id={`block-${id}`} className="bg-white">
-          {children}
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -1303,9 +1319,14 @@ function PreviewHeader({
       <p className="flex min-w-0 items-center gap-2 truncate text-[11.5px] font-medium uppercase tracking-wider text-zinc-400">
         <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-emerald-500" />
         {label}
+        {showEmailModes && (
+          <span className="hidden normal-case tracking-normal text-zinc-400 xl:inline">
+            · click a highlighted section to edit — greyed areas are locked by the template
+          </span>
+        )}
       </p>
       {showEmailModes && (
-        <div className="flex rounded-lg bg-zinc-100 p-0.5">
+        <div className="flex rounded-md bg-zinc-100 p-0.5">
           {EMAIL_MODES.map(({ id, Icon, label }) => (
             <button
               key={id}
@@ -1406,7 +1427,7 @@ function NoTemplatePreview({
         <EmailPreview campaign={campaign} interactive={false} width={compact ? 420 : 600} />
       </div>
       <div className="absolute inset-0 grid place-items-start justify-center pt-24">
-        <div className="rounded-2xl border border-zinc-200 bg-white/95 px-6 py-5 text-center shadow-xl backdrop-blur">
+        <div className="rounded-md border border-zinc-200 bg-white/95 px-6 py-5 text-center shadow-xl backdrop-blur">
           <span className="mx-auto grid size-10 place-items-center rounded-full bg-zinc-100 text-zinc-500">
             <FileText size={18} />
           </span>
@@ -1418,7 +1439,7 @@ function NoTemplatePreview({
           </p>
           <button
             onClick={onChoose}
-            className="mt-3 h-9 rounded-lg bg-zinc-900 px-4 text-[12.5px] font-semibold text-white hover:bg-zinc-800"
+            className="mt-3 h-9 rounded-md bg-blue-600 px-4 text-[12.5px] font-semibold text-white hover:bg-blue-700"
           >
             Select a template
           </button>
@@ -1447,15 +1468,15 @@ function ChannelCard({
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-xl border p-3.5 text-left transition-all ${
+      className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-md border p-3.5 text-left transition-all ${
         active
-          ? "border-zinc-900 bg-zinc-900/[0.03] ring-2 ring-zinc-900/10"
+          ? "border-blue-600 bg-blue-50/60 ring-1 ring-blue-600/20"
           : "border-zinc-200 hover:border-zinc-400"
       }`}
     >
       <span
-        className={`grid size-9 shrink-0 place-items-center rounded-lg ${
-          active ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-500"
+        className={`grid size-9 shrink-0 place-items-center rounded-md ${
+          active ? "bg-blue-600 text-white" : "bg-zinc-100 text-zinc-500"
         }`}
       >
         <Icon size={17} />
@@ -1466,7 +1487,7 @@ function ChannelCard({
       </span>
       <span
         className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border ${
-          active ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-300"
+          active ? "border-blue-600 bg-blue-600 text-white" : "border-zinc-300"
         }`}
       >
         {active && <Check size={12} />}
@@ -1492,7 +1513,7 @@ function MediaUploader({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
+      <div className="flex items-start gap-2.5 rounded-md border border-amber-200 bg-amber-50 px-3 py-2.5">
         <AlertTriangle size={15} className="mt-0.5 shrink-0 text-amber-500" />
         <p className="text-[12px] leading-relaxed text-amber-900">
           Adding an image is <strong>strongly recommended</strong> — MMS previews get much higher
@@ -1501,7 +1522,7 @@ function MediaUploader({
       </div>
 
       {value ? (
-        <div className="relative overflow-hidden rounded-lg border border-zinc-200">
+        <div className="relative overflow-hidden rounded-md border border-zinc-200">
           <img src={value} alt="" className="block max-h-56 w-full object-cover" />
           <button
             onClick={() => onChange(null)}
@@ -1523,7 +1544,7 @@ function MediaUploader({
             setDrag(false);
             pick(e.dataTransfer.files?.[0]);
           }}
-          className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-8 text-center transition-colors ${
+          className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-8 text-center transition-colors ${
             drag ? "border-zinc-900 bg-zinc-50" : "border-zinc-300 hover:border-zinc-400"
           }`}
         >
@@ -1534,7 +1555,7 @@ function MediaUploader({
             <p className="text-[13px] font-medium text-zinc-800">Drop a file here</p>
             <p className="text-[11.5px] text-zinc-500">or click to browse</p>
           </div>
-          <span className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-[12px] font-medium text-zinc-700">
+          <span className="mt-1 inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-[12px] font-medium text-zinc-700">
             <Upload size={12} /> Select file
           </span>
           <input
@@ -1563,15 +1584,15 @@ function MediaUploader({
                 onClick={() => onChange(f.url)}
                 aria-pressed={active}
                 title={f.name}
-                className={`group relative overflow-hidden rounded-lg border transition-all ${
+                className={`group relative overflow-hidden rounded-md border transition-all ${
                   active
-                    ? "border-zinc-900 ring-2 ring-zinc-900/20"
+                    ? "border-blue-600 ring-1 ring-blue-600/25"
                     : "border-zinc-200 hover:border-zinc-400"
                 }`}
               >
                 <img src={f.url} alt={f.name} className="block h-16 w-24 object-cover" />
                 {active && (
-                  <span className="absolute right-1 top-1 grid size-5 place-items-center rounded-full bg-zinc-900 text-white">
+                  <span className="absolute right-1 top-1 grid size-5 place-items-center rounded-full bg-blue-600 text-white">
                     <Check size={11} />
                   </span>
                 )}
@@ -1582,7 +1603,7 @@ function MediaUploader({
           {[0, 1].map((i) => (
             <div
               key={i}
-              className="grid h-16 w-24 place-items-center rounded-lg border border-dashed border-zinc-200 bg-zinc-50 text-zinc-400"
+              className="grid h-16 w-24 place-items-center rounded-md border border-dashed border-zinc-200 bg-zinc-50 text-zinc-400"
             >
               <FileText size={16} />
             </div>
@@ -1612,7 +1633,7 @@ function PromoPreviewCard({
 }) {
   if (!enabled) {
     return (
-      <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-8 text-center text-zinc-500">
+      <div className="rounded-md border border-dashed border-zinc-300 bg-white p-8 text-center text-zinc-500">
         <BadgePercent size={20} className="mx-auto mb-2 text-zinc-400" />
         <p className="text-[13px] font-medium">Promotion is turned off</p>
         <p className="mt-1 text-[11.5px]">Toggle it on to preview the promo card.</p>
@@ -1621,7 +1642,7 @@ function PromoPreviewCard({
   }
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl text-white shadow-lg ${
+      className={`relative overflow-hidden rounded-md text-white shadow-lg ${
         compact ? "p-4" : "p-6"
       }`}
       style={{
@@ -1655,7 +1676,7 @@ function PromoPreviewCard({
           {firstName.toUpperCase()}, you unlocked
         </div>
         <div
-          className={`mt-2 -rotate-1 rounded-lg bg-black/25 shadow-lg ring-1 ring-white/10 backdrop-blur ${
+          className={`mt-2 -rotate-1 rounded-md bg-black/25 shadow-lg ring-1 ring-white/10 backdrop-blur ${
             compact ? "px-3 py-2" : "px-4 py-3"
           }`}
         >
