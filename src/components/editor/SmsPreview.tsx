@@ -6,11 +6,13 @@ import { renderTokens } from "@/lib/campaign";
 export function SmsPreview({
   message,
   link,
+  imageUrl,
   sender = "Hellas Gadgets",
   scale = 0.78,
 }: {
   message: string;
   link?: string;
+  imageUrl?: string | null;
   sender?: string;
   scale?: number;
 }) {
@@ -31,10 +33,15 @@ export function SmsPreview({
         </div>
       }
     >
-      <div className="px-3.5 py-4">
-        <p className="mb-3 text-center text-[10.5px] font-medium text-zinc-400">
+      <div className="space-y-2 px-3.5 py-4">
+        <p className="mb-1 text-center text-[10.5px] font-medium text-zinc-400">
           Text Message · Today 5:00 PM
         </p>
+        {imageUrl && (
+          <div className="max-w-[75%] overflow-hidden rounded-[1.35rem] rounded-bl-md bg-zinc-100">
+            <img src={imageUrl} alt="" className="block h-40 w-full object-cover" />
+          </div>
+        )}
         <div className="max-w-[85%] rounded-[1.35rem] rounded-bl-md bg-zinc-200 px-3.5 py-2.5">
           <p className="whitespace-pre-wrap text-[14.5px] leading-[1.35] text-zinc-900">
             {renderTokens(message)}
