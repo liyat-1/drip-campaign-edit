@@ -79,6 +79,9 @@ export type Campaign = {
     socials: { key: SocialKey; enabled: boolean; url: string }[];
     links: { id: string; label: string; url: string }[];
     text: string;
+    socialBg: string;
+    socialColor: string;
+    socialRadius: number;
   };
 };
 
@@ -212,6 +215,9 @@ const baseCampaign: Campaign = {
       { id: uid(), label: "Unsubscribe", url: "#" },
     ],
     text: "#6b7280",
+    socialBg: "#111827",
+    socialColor: "#ffffff",
+    socialRadius: 999,
   },
 };
 

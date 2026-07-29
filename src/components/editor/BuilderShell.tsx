@@ -134,6 +134,23 @@ function LayoutThumb({ id, big = false }: { id: LayoutId; big?: boolean }) {
   );
 }
 
+/** Live, scaled-down render of the current campaign — the real template preview. */
+function TemplatePreview({ campaign: c }: { campaign: Campaign }) {
+  const w = c.theme.contentWidth;
+  const boxW = 248;
+  const scale = boxW / w;
+  return (
+    <div
+      className="overflow-hidden rounded-lg ring-1 ring-black/10"
+      style={{ width: boxW, height: 172, background: c.theme.pageBg }}
+    >
+      <div style={{ width: w, transform: `scale(${scale})`, transformOrigin: "top left" }}>
+        <EmailPreview campaign={c} interactive={false} inlineEdit={false} width={w} />
+      </div>
+    </div>
+  );
+}
+
 type Mode = "desktop" | "mobile" | "inbox" | "dark";
 const MODES = [
   { id: "desktop" as const, label: "Desktop", Icon: Monitor },
@@ -238,19 +255,26 @@ export function BuilderShell({
   if (minimized) {
     return (
       <div className="grid min-h-dvh place-items-end bg-zinc-900/70 p-4">
-        <button
-          onClick={() => setMinimized(false)}
-          className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-left shadow-2xl"
-        >
+        <div className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-2xl">
           <Pencil size={15} className="text-zinc-400" />
-          <span>
-            <span className="block text-[13px] font-semibold text-zinc-900">
-              {stripHtml(campaign.meta.name)}
-            </span>
-            <span className="block text-[11.5px] text-zinc-500">Minimised · click to resume</span>
-          </span>
-          <Maximize2 size={15} className="text-zinc-400" />
-        </button>
+          <div className="flex flex-col">
+            <input
+              value={campaign.meta.name}
+              aria-label="Campaign name"
+              onChange={(e) => update((d) => void (d.meta.name = e.target.value))}
+              className="w-56 rounded-md px-1.5 py-0.5 text-[13px] font-semibold text-zinc-900 outline-none transition-colors hover:bg-zinc-100 focus:bg-zinc-100"
+            />
+            <span className="px-1.5 text-[11.5px] text-zinc-500">Minimised</span>
+          </div>
+          <button
+            onClick={() => setMinimized(false)}
+            aria-label="Resume editor"
+            title="Resume"
+            className="grid size-9 shrink-0 place-items-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+          >
+            <Maximize2 size={15} />
+          </button>
+        </div>
       </div>
     );
   }
@@ -401,15 +425,15 @@ export function BuilderShell({
               >
                 <div className="space-y-5 p-4">
                   <div className="space-y-2">
-                    <div className="rounded-xl border border-zinc-200 p-3">
-                      <LayoutThumb id={layout} big />
-                      <p className="mt-3 text-[13px] font-semibold text-zinc-900">
-                        {activeLayout.name}
-                      </p>
-                      <p className="mt-0.5 text-[11.5px] leading-snug text-zinc-500">
-                        {activeLayout.desc}
-                      </p>
+                    <div className="flex justify-center rounded-xl border border-zinc-200 p-3">
+                      <TemplatePreview campaign={campaign} />
                     </div>
+                    <p className="text-[13px] font-semibold text-zinc-900">
+                      {activeLayout.name}
+                    </p>
+                    <p className="text-[11.5px] leading-snug text-zinc-500">
+                      {activeLayout.desc}
+                    </p>
                     <button
                       onClick={() => setLayoutPicker(true)}
                       className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-zinc-200 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900"
