@@ -208,6 +208,21 @@ export function CampaignWizard() {
   const activeTab: "text" | "email" =
     channel === "text" ? "text" : channel === "email" ? "email" : contentTab;
 
+  /* Selecting a content block in the email preview opens a floating editor
+   * anchored to it — same mechanic as the template studio. */
+  const emailEditing =
+    created && step === "content" && activeTab === "email" && templateReady && emailMode !== "inbox";
+  const floatingBlock =
+    emailEditing && openBlock && EDITABLE_BLOCKS.includes(openBlock) ? openBlock : null;
+  const anchor = useAnchorRect(floatingBlock, !!floatingBlock, [
+    campaign,
+    emailMode,
+    step,
+    expanded,
+  ]);
+
+
+
   /* ---------------- Step 0 · name the campaign ---------------- */
   if (!created) {
     return (
