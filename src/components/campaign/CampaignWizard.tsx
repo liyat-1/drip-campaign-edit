@@ -23,10 +23,6 @@ import {
   Upload,
   AlertTriangle,
   Trash2,
-  User,
-  Calendar,
-  Building2,
-  Sparkles,
   BadgePercent,
   Repeat,
   Split,
@@ -36,7 +32,7 @@ import {
   FileText,
 } from "lucide-react";
 import { EmailPreview, type BlockId } from "../editor/EmailPreview";
-import { BLOCK_LABELS, BlockForm } from "../editor/BlockForms";
+import { BLOCK_LABELS } from "../editor/BlockForms";
 import { PhoneMockup } from "../editor/PhoneMockup";
 import { SmsPreview } from "../editor/SmsPreview";
 import { InboxPreview } from "../editor/InboxPreview";
@@ -93,43 +89,35 @@ const MIN_NIGHTS = [
   { value: "7", label: "7 nights" },
 ];
 
-const MERGE_TAGS: (TagDef & {
-  Icon: React.ComponentType<{ size?: number; className?: string }>;
-  chip: string;
-})[] = [
+const MERGE_TAGS: (TagDef & { chip: string })[] = [
   {
     token: "{{first_name}}",
     label: "firstName",
     tone: "indigo",
-    Icon: User,
     chip: "bg-indigo-100 text-indigo-700 hover:bg-indigo-200",
   },
   {
     token: "{{last_name}}",
     label: "lastName",
     tone: "sky",
-    Icon: User,
     chip: "bg-sky-100 text-sky-700 hover:bg-sky-200",
   },
   {
     token: "{{checkout_date}}",
     label: "checkoutDate",
     tone: "amber",
-    Icon: Calendar,
     chip: "bg-amber-100 text-amber-700 hover:bg-amber-200",
   },
   {
     token: "{{hotel}}",
     label: "hotelName",
     tone: "emerald",
-    Icon: Building2,
     chip: "bg-emerald-100 text-emerald-700 hover:bg-emerald-200",
   },
   {
     token: "{{loyalty_tier}}",
     label: "loyaltyTier",
     tone: "violet",
-    Icon: Sparkles,
     chip: "bg-violet-100 text-violet-700 hover:bg-violet-200",
   },
 ];
