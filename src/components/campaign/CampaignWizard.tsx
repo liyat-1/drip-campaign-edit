@@ -487,8 +487,22 @@ export function CampaignWizard() {
                   setValidFrom={setValidFrom}
                   validTo={validTo}
                   setValidTo={setValidTo}
+                  sequence={sequence}
+                  setSequence={setSequence}
+                  audience={audience}
+                  setAudience={setAudience}
+                  startDate={startDate}
+                  setStartDate={setStartDate}
+                  cutOff={cutOff}
+                  setCutOff={setCutOff}
+                  cutOffDate={cutOffDate}
+                  setCutOffDate={setCutOffDate}
+                  guests={guests}
+                  cost={cost}
+                  channel={channel}
                   openRail={openRail}
                   toggle={toggleRail}
+
                 />
               )}
             </div>
