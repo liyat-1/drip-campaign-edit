@@ -1099,10 +1099,23 @@ function PromotionRail(props: {
   setValidFrom: (v: string) => void;
   validTo: string;
   setValidTo: (v: string) => void;
+  sequence: boolean;
+  setSequence: (v: boolean) => void;
+  audience: string;
+  setAudience: (v: string) => void;
+  startDate: string;
+  setStartDate: (v: string) => void;
+  cutOff: boolean;
+  setCutOff: (v: boolean) => void;
+  cutOffDate: string;
+  setCutOffDate: (v: string) => void;
+  guests: number;
+  cost: string;
+  channel: Channel | null;
   openRail: Record<number, boolean>;
   toggle: (i: number) => void;
 }) {
-  const { openRail, toggle } = props;
+  const { openRail, toggle, channel } = props;
   return (
     <>
       <RailSection
@@ -1185,9 +1198,99 @@ function PromotionRail(props: {
           </RailSection>
         </>
       )}
+
+      <RailSection
+        index={props.promoOn ? 4 : 2}
+        title="Audience & schedule"
+        hint="Who receives it and when"
+        open={!!openRail[4]}
+        onToggle={() => toggle(4)}
+      >
+        <div className="space-y-4 p-4">
+          <div>
+            <p className="text-[13px] font-semibold text-zinc-900">Select your audience</p>
+            <p className="mt-0.5 text-[11.5px] text-zinc-500">
+              Choose who will receive this campaign.
+            </p>
+          </div>
+          <Field label="Audience" hint={`Approx. ${props.guests.toLocaleString()} guests`}>
+            <Select
+              ariaLabel="Audience"
+              value={props.audience}
+              options={AUDIENCES}
+              onChange={props.setAudience}
+            />
+          </Field>
+          <div className="h-px bg-zinc-100" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Start sending on">
+              <TextInput type="date" value={props.startDate} onChange={props.setStartDate} />
+            </Field>
+            {props.cutOff && (
+              <Field label="Stop sending on">
+                <TextInput type="date" value={props.cutOffDate} onChange={props.setCutOffDate} />
+              </Field>
+            )}
+          </div>
+          <ToggleRow
+            label="Add cut-off date"
+            hint="Stop sending automatically at a certain date."
+            checked={props.cutOff}
+            onChange={props.setCutOff}
+          />
+          <div className="h-px bg-zinc-100" />
+          <ToggleRow
+            label="Enable message sequence"
+            hint="Send automatic follow-ups with configurable delays."
+            checked={props.sequence}
+            onChange={props.setSequence}
+          />
+        </div>
+      </RailSection>
+
+      <RailSection
+        index={props.promoOn ? 5 : 3}
+        title="Summary"
+        hint="Estimated impact"
+        open={!!openRail[5]}
+        onToggle={() => toggle(5)}
+      >
+        <div className="p-4">
+          <div className="rounded-md border border-emerald-100 bg-emerald-50/70 p-5">
+            <div className="flex items-center gap-3">
+              <CalendarCheck2 size={22} className="text-emerald-600" />
+              <div>
+                <p className="text-[12px] font-medium text-emerald-800/70">Estimated end date</p>
+                <p className="text-[16px] font-semibold text-emerald-900">
+                  {props.cutOff ? "Aug 30, 2026" : "Jul 30, 2026"}
+                </p>
+              </div>
+            </div>
+            <ul className="mt-4 space-y-2.5 text-[13px] text-emerald-900/90">
+              <li className="flex items-center gap-2.5">
+                <Users size={16} className="text-emerald-600" />
+                {props.guests.toLocaleString()} guests will be reached
+              </li>
+              <li className="flex items-center gap-2.5">
+                <Gift size={16} className="text-emerald-600" />
+                {hasText(channel) ? "250 complimentary texts" : "Unlimited emails on your plan"}
+              </li>
+              <li className="flex items-center gap-2.5">
+                <Coins size={16} className="text-emerald-600" />${props.cost} approx. (
+                {hasText(channel) ? "$0.06 / text" : "$0.00 / email"})
+              </li>
+              <li className="flex items-center gap-2.5">
+                <Clock size={16} className="text-emerald-600" />
+                Sent around 5pm in each guest&rsquo;s time zone
+              </li>
+            </ul>
+          </div>
+        </div>
+      </RailSection>
     </>
   );
 }
+
 
 /* ===================== Preview column header + previews ===================== */
 
