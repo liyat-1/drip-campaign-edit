@@ -506,8 +506,7 @@ export function CampaignWizard() {
           </aside>
 
           {/* Right preview column */}
-          {showPreview && (
-            <section className="relative hidden min-h-0 flex-col overflow-hidden bg-zinc-100 lg:flex">
+          <section className="relative hidden min-h-0 flex-col overflow-hidden bg-zinc-100 lg:flex">
               <PreviewHeader
                 step={step}
                 activeTab={activeTab}
