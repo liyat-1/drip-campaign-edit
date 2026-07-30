@@ -691,21 +691,10 @@ export function CampaignWizard() {
 function PreferencesRail(props: {
   channel: Channel | null;
   setChannel: (c: Channel) => void;
-  sequence: boolean;
-  setSequence: (v: boolean) => void;
-  audience: string;
-  setAudience: (v: string) => void;
-  startDate: string;
-  setStartDate: (v: string) => void;
-  cutOff: boolean;
-  setCutOff: (v: boolean) => void;
-  cutOffDate: string;
-  setCutOffDate: (v: string) => void;
-  guests: number;
-  cost: string;
   openRail: Record<number, boolean>;
   toggle: (i: number) => void;
 }) {
+
   const { channel, setChannel, openRail, toggle } = props;
   return (
     <>
