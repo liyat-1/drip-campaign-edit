@@ -436,22 +436,11 @@ export function CampaignWizard() {
                 <PreferencesRail
                   channel={channel}
                   setChannel={setChannel}
-                  sequence={sequence}
-                  setSequence={setSequence}
-                  audience={audience}
-                  setAudience={setAudience}
-                  startDate={startDate}
-                  setStartDate={setStartDate}
-                  cutOff={cutOff}
-                  setCutOff={setCutOff}
-                  cutOffDate={cutOffDate}
-                  setCutOffDate={setCutOffDate}
-                  guests={guests}
-                  cost={cost}
                   openRail={openRail}
                   toggle={toggleRail}
                 />
               )}
+
 
               {step === "content" && (
                 <ContentRail
