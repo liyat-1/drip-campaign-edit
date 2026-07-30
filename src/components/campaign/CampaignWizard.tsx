@@ -606,10 +606,10 @@ export function CampaignWizard() {
                     </div>
                   </div>
                 )}
-
+                {!showPreview && <NoChannelPreview />}
               </div>
             </section>
-          )}
+
         </div>
 
         {/* Footer */}
