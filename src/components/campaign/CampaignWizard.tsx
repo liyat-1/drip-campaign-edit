@@ -1446,7 +1446,28 @@ function NoTemplatePreview({
   );
 }
 
+/** Shown in the preview column before a channel strategy is picked. */
+function NoChannelPreview() {
+  return (
+    <div className="grid h-full place-items-center px-6">
+      <div className="max-w-sm border border-dashed border-zinc-300 bg-white px-8 py-10 text-center">
+        <span className="mx-auto grid size-10 place-items-center bg-blue-50 text-blue-600">
+          <FileText size={18} />
+        </span>
+        <p className="mt-3 text-[14px] font-semibold text-zinc-900">
+          Please select a channel strategy to preview
+        </p>
+        <p className="mt-1 text-[12.5px] leading-relaxed text-zinc-500">
+          Choose Text only, Email only, or a combined strategy on the left and the matching preview
+          appears here instantly.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /* ===================== Shared bits ===================== */
+
 
 function ChannelCard({
   active,
