@@ -270,7 +270,7 @@ export function TemplatePicker({
 
             {/* Gallery */}
             <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid content-start gap-3 sm:grid-cols-2">
                 {list.slice(0, visible).map((t) => (
                   <TemplateCard
                     key={t.id}
@@ -549,14 +549,14 @@ function TemplateCard({
     <button
       onClick={onSelect}
       aria-pressed={selected}
-      className={`overflow-hidden border text-left transition-colors ${
+      className={`flex h-full flex-col overflow-hidden border text-left transition-colors ${
         selected
           ? "border-blue-600 ring-1 ring-blue-600/25"
           : "border-zinc-200 hover:border-zinc-400"
       }`}
     >
       <div
-        className="relative flex justify-center p-3"
+        className="relative flex h-[164px] shrink-0 items-center justify-center p-3"
         style={{ background: scheme === "dark" ? "#141518" : "#f4f4f5" }}
       >
         <ScaledEmail
@@ -570,7 +570,7 @@ function TemplateCard({
           </span>
         )}
       </div>
-      <div className="space-y-2 border-t border-zinc-100 p-3">
+      <div className="flex flex-1 flex-col gap-2 border-t border-zinc-100 p-3">
         <div className="flex items-start justify-between gap-2">
           <p className="min-w-0 truncate text-[13px] font-semibold text-zinc-900">{t.name}</p>
           <Badge tone={t.shared ? "blue" : "zinc"}>{t.shared ? "Shared" : "Personal"}</Badge>
