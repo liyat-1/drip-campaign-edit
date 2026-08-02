@@ -45,7 +45,7 @@ import { TemplatePicker } from "./TemplatePicker";
 import { TagTextArea, type TagDef } from "./TagTextArea";
 import { useCampaign } from "@/lib/useCampaign";
 import { createCanvasCampaign } from "@/lib/campaign";
-import { getTemplate, listTemplates, markTemplateUsed } from "@/lib/templateStore";
+import { getTemplate } from "@/lib/templateStore";
 import { stripHtml } from "@/lib/richtext";
 import heroAmalfi from "@/assets/hero-amalfi.jpg";
 import heroValley from "@/assets/hero-valley.jpg";
@@ -134,8 +134,16 @@ const RECENT_FILES = [
   { name: "hero-valley.jpg", url: heroValley },
 ];
 
+/** New campaigns open immediately — no naming gate. The auto title is
+ * editable inline from the header, Figma style. */
+function newDraftCampaign() {
+  const c = createCanvasCampaign();
+  c.meta.name = "Untitled campaign";
+  return c;
+}
+
 export function CampaignWizard() {
-  const { campaign, update } = useCampaign(createCanvasCampaign);
+  const { campaign, update } = useCampaign(newDraftCampaign);
 
   const [nameFocused, setNameFocused] = useState(false);
 
@@ -156,6 +164,7 @@ export function CampaignWizard() {
     3: true,
     4: true,
     5: true,
+    6: true,
   });
 
   const toggleRail = (i: number) => setOpenRail((s) => ({ ...s, [i]: !s[i] }));
