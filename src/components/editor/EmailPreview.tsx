@@ -195,8 +195,12 @@ export function EmailPreview({
                     : "flex-start",
             }}
           >
-            {c.header.logoUrl ? (
-              <img src={c.header.logoUrl} alt={c.header.logoText} className="h-10 w-auto object-contain" />
+            {(dark ? c.header.logoUrlDark || c.header.logoUrl : c.header.logoUrl) ? (
+              <img
+                src={(dark ? c.header.logoUrlDark || c.header.logoUrl : c.header.logoUrl) as string}
+                alt={c.header.logoText}
+                className="h-10 w-auto object-contain"
+              />
             ) : (
               <span
                 className="border-2 px-3 py-1.5 text-center font-mono text-[11px] font-semibold uppercase leading-tight tracking-[0.18em]"

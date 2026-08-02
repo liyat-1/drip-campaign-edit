@@ -69,13 +69,27 @@ function HeaderForm({ campaign: c, update }: Props) {
   return (
     <>
       <VisibilityRow visible={c.header.visible} onChange={(v) => update((d) => void (d.header.visible = v))} />
-      <Group title="Logo">
+      <Group title="Logo · light mode">
         <ImageField
           value={c.header.logoUrl ?? ""}
           alt={c.header.logoText}
           onChange={(v) => update((d) => void (d.header.logoUrl = v || null))}
           onAltChange={(v) => update((d) => void (d.header.logoText = v))}
         />
+      </Group>
+      <Group title="Logo · dark mode">
+        <p className="-mt-1 text-[11.5px] leading-relaxed text-zinc-500">
+          Optional. Upload a light version of your logo for guests reading in dark mode. Leave
+          empty to reuse the light-mode logo.
+        </p>
+        <ImageField
+          value={c.header.logoUrlDark ?? ""}
+          alt={c.header.logoText}
+          onChange={(v) => update((d) => void (d.header.logoUrlDark = v || null))}
+          onAltChange={(v) => update((d) => void (d.header.logoText = v))}
+        />
+      </Group>
+      <Group title="Wordmark">
         <Field label="Fallback wordmark" hint="Used when no logo image">
           <TextInput value={c.header.logoText} onChange={(v) => update((d) => void (d.header.logoText = v))} />
         </Field>
