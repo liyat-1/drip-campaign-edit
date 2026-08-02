@@ -31,6 +31,14 @@ import { InboxPreview } from "./InboxPreview";
 import { PhoneMockup } from "./PhoneMockup";
 import { Field, TextArea, TextInput } from "./controls";
 import { useCampaign } from "@/lib/useCampaign";
+import {
+  createTemplate,
+  getTemplate,
+  readStudioRequest,
+  setStudioResult,
+  updateTemplate,
+  type StudioRequest,
+} from "@/lib/templateStore";
 import { renderTokens, type Campaign } from "@/lib/campaign";
 import { stripHtml } from "@/lib/richtext";
 
@@ -211,7 +219,21 @@ export function BuilderShell({
   backLabel?: string;
   floatingEditor?: boolean;
 }) {
-  const { campaign, update, undo, redo, canUndo, canRedo } = useCampaign(initial);
+  // When the Template Studio is opened from the campaign template library we
+  // either start a brand-new template (layout first) or edit an existing one.
+  const [req] = useState<StudioRequest | null>(() => readStudioRequest());
+  const editing = req?.mode === "edit" ? getTemplate(req.templateId ?? null) : undefined;
+  const [seedFn] = useState<() => Campaign>(() =>
+    editing ? () => JSON.parse(JSON.stringify(editing.campaign)) : initial,
+  );
+  const { campaign, update, undo, redo, canUndo, canRedo } = useCampaign(seedFn);
+  const [needsLayout, setNeedsLayout] = useState(req?.mode === "create");
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [saveMode, setSaveMode] = useState<"new" | "update">(editing ? "new" : "new");
+  const [saveName, setSaveName] = useState(
+    editing ? `${editing.name} copy` : "Untitled template",
+  );
+  const [savedTemplate, setSavedTemplate] = useState<string | null>(null);
   const [selected, setSelected] = useState<BlockId | null>(null);
   const [mode, setMode] = useState<Mode>("desktop");
   const [layout, setLayout] = useState<LayoutId>("classic");
@@ -246,6 +268,25 @@ export function BuilderShell({
   const saveDraft = () => {
     setSavedAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
     notify("Draft saved");
+  };
+
+  const commitSave = () => {
+    const stamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    if (saveMode === "update" && editing) {
+      updateTemplate(editing.id, campaign);
+      setStudioResult(editing.id);
+      setSavedTemplate(editing.name);
+    } else {
+      const created = createTemplate(
+        campaign,
+        saveName.trim() || "Untitled template",
+        "Created in Template Studio.",
+      );
+      setStudioResult(created.id);
+      setSavedTemplate(created.name);
+    }
+    setSavedAt(stamp);
+    setSaveOpen(false);
   };
 
   const chromeBtn =
@@ -318,10 +359,10 @@ export function BuilderShell({
               <Pencil size={14} /> Inline text
             </button>
             <button
-              onClick={saveDraft}
-              className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-1.5 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+              onClick={() => setSaveOpen(true)}
+              className="flex items-center gap-1.5 border border-zinc-200 px-3 py-1.5 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-300 hover:bg-zinc-50"
             >
-              <Save size={14} /> <span className="hidden sm:inline">Save</span>
+              <Save size={14} /> <span className="hidden sm:inline">Save template</span>
             </button>
             <button
               onClick={() => setPanelOpen((v) => !v)}
