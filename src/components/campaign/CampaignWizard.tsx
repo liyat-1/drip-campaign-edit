@@ -45,7 +45,7 @@ import { TemplatePicker } from "./TemplatePicker";
 import { TagTextArea, type TagDef } from "./TagTextArea";
 import { useCampaign } from "@/lib/useCampaign";
 import { createCanvasCampaign } from "@/lib/campaign";
-import { EMAIL_TEMPLATES } from "@/lib/templates";
+import { getTemplate, listTemplates, markTemplateUsed } from "@/lib/templateStore";
 import { stripHtml } from "@/lib/richtext";
 import heroAmalfi from "@/assets/hero-amalfi.jpg";
 import heroValley from "@/assets/hero-valley.jpg";
@@ -137,8 +137,7 @@ const RECENT_FILES = [
 export function CampaignWizard() {
   const { campaign, update } = useCampaign(createCanvasCampaign);
 
-  const [created, setCreated] = useState(false);
-  const [draftName, setDraftName] = useState("Campaign - new");
+  const [nameFocused, setNameFocused] = useState(false);
 
   const [step, setStep] = useState<Step>("preferences");
   const [channel, setChannel] = useState<Channel | null>(null);
@@ -202,7 +201,7 @@ export function CampaignWizard() {
   /* Selecting a content block in the email preview opens a floating editor
    * anchored to it — same mechanic as the template studio. */
   const emailEditing =
-    created && step === "content" && activeTab === "email" && templateReady && emailMode !== "inbox";
+    step === "content" && activeTab === "email" && templateReady && emailMode !== "inbox";
   const floatingBlock =
     emailEditing && openBlock && EDITABLE_BLOCKS.includes(openBlock) ? openBlock : null;
   const anchor = useAnchorRect(floatingBlock, !!floatingBlock, [
@@ -213,58 +212,6 @@ export function CampaignWizard() {
   ]);
 
 
-
-  /* ---------------- Step 0 · name the campaign ---------------- */
-  if (!created) {
-    return (
-      <div className="grid min-h-dvh place-items-center bg-zinc-900/70 p-4 font-sans text-zinc-900">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!draftName.trim()) return;
-            update((d) => void (d.meta.name = draftName.trim()));
-            setCreated(true);
-          }}
-          className="w-full max-w-md overflow-hidden rounded-md bg-white shadow-2xl"
-        >
-          <div className="flex items-start justify-between gap-3 px-6 pb-4 pt-5">
-            <div>
-              <h1 className="text-[17px] font-semibold tracking-tight">Create new campaign</h1>
-              <p className="mt-0.5 text-[12.5px] text-zinc-500">
-                Name it now — you pick the channel on the next screen.
-              </p>
-            </div>
-            <Link
-              to="/"
-              aria-label="Cancel"
-              className="grid size-8 place-items-center rounded-md text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
-            >
-              <X size={17} />
-            </Link>
-          </div>
-          <div className="border-y border-zinc-100 bg-zinc-50/70 px-6 py-5">
-            <Field label="Drip campaign name">
-              <TextInput value={draftName} onChange={setDraftName} placeholder="Summer reactivation" />
-            </Field>
-          </div>
-          <div className="flex items-center justify-end gap-2.5 px-6 py-4">
-            <Link
-              to="/"
-              className="grid h-10 place-items-center rounded-md border border-zinc-200 px-5 text-[13px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
-            >
-              Cancel
-            </Link>
-            <button
-              type="submit"
-              className="h-10 rounded-md bg-blue-600 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700"
-            >
-              Continue
-            </button>
-          </div>
-        </form>
-      </div>
-    );
-  }
 
   /* ---------------- Minimised chip ---------------- */
   if (minimized) {
@@ -317,13 +264,32 @@ export function CampaignWizard() {
       >
         {/* Chrome */}
         <header className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-zinc-200 bg-white px-3 py-2.5 sm:px-4">
-          <div className="flex min-w-0 items-center gap-2">
-            <input
-              value={campaign.meta.name}
-              aria-label="Campaign name"
-              onChange={(e) => update((d) => void (d.meta.name = e.target.value))}
-              className="min-w-0 max-w-[20rem] flex-1 truncate rounded-md px-2 py-1.5 text-[14px] font-semibold outline-none transition-colors hover:bg-zinc-100 focus:bg-zinc-100"
-            />
+          <div className="flex min-w-0 items-center gap-1.5">
+            <label className="group flex min-w-0 items-center gap-1.5 border border-transparent px-1 transition-colors hover:border-zinc-200 focus-within:border-blue-600">
+              <input
+                value={campaign.meta.name}
+                aria-label="Campaign name — click to rename"
+                title="Click to rename this campaign"
+                placeholder="Untitled campaign"
+                onFocus={(e) => {
+                  setNameFocused(true);
+                  e.currentTarget.select();
+                }}
+                onBlur={(e) => {
+                  setNameFocused(false);
+                  if (!e.target.value.trim()) update((d) => void (d.meta.name = "Untitled campaign"));
+                }}
+                onChange={(e) => update((d) => void (d.meta.name = e.target.value))}
+                className="min-w-0 max-w-[20rem] flex-1 truncate bg-transparent px-1 py-1.5 text-[14px] font-semibold outline-none"
+              />
+              <Pencil
+                size={13}
+                aria-hidden
+                className={`shrink-0 transition-opacity ${
+                  nameFocused ? "text-blue-600" : "text-zinc-400 opacity-60 group-hover:opacity-100"
+                }`}
+              />
+            </label>
             {channel && (
               <span className="hidden shrink-0 items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-1 text-[11px] font-medium text-zinc-600 sm:flex">
                 {channel === "email" ? (
@@ -467,6 +433,8 @@ export function CampaignWizard() {
                   setOpenBlock={setOpenBlock}
                   openRail={openRail}
                   toggle={toggleRail}
+                  sequence={sequence}
+                  setSequence={setSequence}
                   onTest={(kind) => notify(`Test ${kind} sent`)}
                 />
               )}
@@ -489,8 +457,6 @@ export function CampaignWizard() {
                   setValidFrom={setValidFrom}
                   validTo={validTo}
                   setValidTo={setValidTo}
-                  sequence={sequence}
-                  setSequence={setSequence}
                   audience={audience}
                   setAudience={setAudience}
                   startDate={startDate}
@@ -766,6 +732,8 @@ function ContentRail(props: {
   setOpenBlock: (b: BlockId | null) => void;
   openRail: Record<number, boolean>;
   toggle: (i: number) => void;
+  sequence: boolean;
+  setSequence: (v: boolean) => void;
   onTest: (kind: "email" | "text") => void;
 }) {
   const {
@@ -951,7 +919,7 @@ function ContentRail(props: {
                 <ScaledEmail campaign={campaign} width={92} height={66} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-semibold text-zinc-900">
-                    {EMAIL_TEMPLATES.find((t) => t.id === templateId)?.name}
+                    {getTemplate(templateId)?.name ?? "Selected design"}
                   </p>
                   <p className="text-[11.5px] text-zinc-500">Selected design</p>
                 </div>
@@ -1078,6 +1046,26 @@ function ContentRail(props: {
           </RailSection>
         </>
       )}
+
+      {((activeTab === "text" && hasText(channel)) ||
+        (activeTab === "email" && hasEmail(channel) && templateId !== null)) && (
+        <RailSection
+          index={activeTab === "text" ? 4 : 5}
+          title="Follow-ups"
+          hint="Automatic reminders after this message"
+          open={!!openRail[6]}
+          onToggle={() => toggle(6)}
+        >
+          <div className="p-4">
+            <ToggleRow
+              label="Enable message sequence"
+              hint="Send automatic follow-ups with configurable delays if a guest doesn't book."
+              checked={props.sequence}
+              onChange={props.setSequence}
+            />
+          </div>
+        </RailSection>
+      )}
     </>
   );
 }
@@ -1101,8 +1089,6 @@ function PromotionRail(props: {
   setValidFrom: (v: string) => void;
   validTo: string;
   setValidTo: (v: string) => void;
-  sequence: boolean;
-  setSequence: (v: boolean) => void;
   audience: string;
   setAudience: (v: string) => void;
   startDate: string;
@@ -1239,13 +1225,6 @@ function PromotionRail(props: {
             hint="Stop sending automatically at a certain date."
             checked={props.cutOff}
             onChange={props.setCutOff}
-          />
-          <div className="h-px bg-zinc-100" />
-          <ToggleRow
-            label="Enable message sequence"
-            hint="Send automatic follow-ups with configurable delays."
-            checked={props.sequence}
-            onChange={props.setSequence}
           />
         </div>
       </RailSection>
