@@ -31,6 +31,14 @@ import { InboxPreview } from "./InboxPreview";
 import { PhoneMockup } from "./PhoneMockup";
 import { Field, TextArea, TextInput } from "./controls";
 import { useCampaign } from "@/lib/useCampaign";
+import {
+  createTemplate,
+  getTemplate,
+  readStudioRequest,
+  setStudioResult,
+  updateTemplate,
+  type StudioRequest,
+} from "@/lib/templateStore";
 import { renderTokens, type Campaign } from "@/lib/campaign";
 import { stripHtml } from "@/lib/richtext";
 
@@ -116,7 +124,9 @@ function LayoutThumb({ id, big = false }: { id: LayoutId; big?: boolean }) {
           <div className={`rounded bg-zinc-300/80 ${big ? "h-12" : "h-4"}`} />
           <div className={`${bar} mx-auto h-1 w-3/4`} />
           {big && <div className={`${bar} mx-auto h-1 w-1/2`} />}
-          <div className={`mx-auto rounded-full bg-zinc-400 ${big ? "mt-1 h-4 w-20" : "h-2 w-10"}`} />
+          <div
+            className={`mx-auto rounded-full bg-zinc-400 ${big ? "mt-1 h-4 w-20" : "h-2 w-10"}`}
+          />
         </>
       )}
       {id === "editorial" && (
@@ -211,7 +221,19 @@ export function BuilderShell({
   backLabel?: string;
   floatingEditor?: boolean;
 }) {
-  const { campaign, update, undo, redo, canUndo, canRedo } = useCampaign(initial);
+  // When the Template Studio is opened from the campaign template library we
+  // either start a brand-new template (layout first) or edit an existing one.
+  const [req] = useState<StudioRequest | null>(() => readStudioRequest());
+  const editing = req?.mode === "edit" ? getTemplate(req.templateId ?? null) : undefined;
+  const [seedFn] = useState<() => Campaign>(() =>
+    editing ? () => JSON.parse(JSON.stringify(editing.campaign)) : initial,
+  );
+  const { campaign, update, undo, redo, canUndo, canRedo } = useCampaign(seedFn);
+  const [needsLayout, setNeedsLayout] = useState(req?.mode === "create");
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [saveMode, setSaveMode] = useState<"new" | "update">(editing ? "new" : "new");
+  const [saveName, setSaveName] = useState(editing ? `${editing.name} copy` : "Untitled template");
+  const [savedTemplate, setSavedTemplate] = useState<string | null>(null);
   const [selected, setSelected] = useState<BlockId | null>(null);
   const [mode, setMode] = useState<Mode>("desktop");
   const [layout, setLayout] = useState<LayoutId>("classic");
@@ -243,14 +265,89 @@ export function BuilderShell({
     setPanelOpen(false);
   };
 
-  const saveDraft = () => {
-    setSavedAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
-    notify("Draft saved");
+  const commitSave = () => {
+    const stamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    if (saveMode === "update" && editing) {
+      updateTemplate(editing.id, campaign);
+      setStudioResult(editing.id);
+      setSavedTemplate(editing.name);
+    } else {
+      const created = createTemplate(
+        campaign,
+        saveName.trim() || "Untitled template",
+        "Created in Template Studio.",
+      );
+      setStudioResult(created.id);
+      setSavedTemplate(created.name);
+    }
+    setSavedAt(stamp);
+    setSaveOpen(false);
   };
 
   const chromeBtn =
     "grid size-8 place-items-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-30";
   const activeLayout = LAYOUTS.find((l) => l.id === layout)!;
+
+  /* Step 0 for a brand-new template: pick the layout first. */
+  if (needsLayout) {
+    return (
+      <div className="grid min-h-dvh place-items-center bg-zinc-900/70 p-4 font-sans text-zinc-900">
+        <div className="w-full max-w-3xl border border-zinc-300 bg-white shadow-2xl">
+          <div className="flex items-start justify-between gap-3 border-b border-zinc-200 px-6 py-4">
+            <div>
+              <p className="font-mono text-[11px] font-semibold uppercase tracking-widest text-blue-600">
+                Step 1 of 2
+              </p>
+              <h1 className="mt-1 text-[18px] font-semibold tracking-tight">
+                Choose a layout to start from
+              </h1>
+              <p className="mt-1 text-[12.5px] text-zinc-500">
+                This sets the skeleton of your template. You can change everything afterwards.
+              </p>
+            </div>
+            <Link to="/" aria-label="Cancel" className={chromeBtn}>
+              <X size={17} />
+            </Link>
+          </div>
+          <div className="grid gap-3 p-6 sm:grid-cols-3">
+            {LAYOUTS.map((l) => (
+              <button
+                key={l.id}
+                onClick={() => setLayout(l.id)}
+                aria-pressed={layout === l.id}
+                className={`border p-3 text-left transition-colors ${
+                  layout === l.id
+                    ? "border-blue-600 bg-blue-50/60 ring-1 ring-blue-600/20"
+                    : "border-zinc-200 hover:border-zinc-400"
+                }`}
+              >
+                <LayoutThumb id={l.id} big />
+                <span className="mt-3 flex items-center justify-between gap-2">
+                  <span className="text-[13.5px] font-semibold text-zinc-900">{l.name}</span>
+                  {layout === l.id && <Check size={15} className="text-blue-600" />}
+                </span>
+                <span className="mt-1 block text-[12px] leading-snug text-zinc-500">{l.desc}</span>
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center justify-between gap-3 border-t border-zinc-200 bg-zinc-50 px-6 py-3.5">
+            <p className="text-[12px] text-zinc-500">
+              Next: design your template, then choose how to save it.
+            </p>
+            <button
+              onClick={() => {
+                update((d) => applyLayout(d, layout));
+                setNeedsLayout(false);
+              }}
+              className="h-10 bg-blue-600 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700"
+            >
+              Start designing
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (minimized) {
     return (
@@ -318,10 +415,10 @@ export function BuilderShell({
               <Pencil size={14} /> Inline text
             </button>
             <button
-              onClick={saveDraft}
-              className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-1.5 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+              onClick={() => setSaveOpen(true)}
+              className="flex items-center gap-1.5 border border-zinc-200 px-3 py-1.5 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-300 hover:bg-zinc-50"
             >
-              <Save size={14} /> <span className="hidden sm:inline">Save</span>
+              <Save size={14} /> <span className="hidden sm:inline">Save template</span>
             </button>
             <button
               onClick={() => setPanelOpen((v) => !v)}
@@ -333,10 +430,22 @@ export function BuilderShell({
 
             <span className="mx-1 h-5 w-px bg-zinc-200" />
 
-            <button className={chromeBtn} onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo">
+            <button
+              className={chromeBtn}
+              onClick={undo}
+              disabled={!canUndo}
+              aria-label="Undo"
+              title="Undo"
+            >
               <Undo2 size={16} />
             </button>
-            <button className={chromeBtn} onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo">
+            <button
+              className={chromeBtn}
+              onClick={redo}
+              disabled={!canRedo}
+              aria-label="Redo"
+              title="Redo"
+            >
               <Redo2 size={16} />
             </button>
             <button
@@ -388,7 +497,9 @@ export function BuilderShell({
           {/* Left rail */}
           <aside
             className={`${
-              panelOpen ? "absolute inset-y-0 left-0 z-40 flex w-[86vw] max-w-[22rem] shadow-2xl" : "hidden"
+              panelOpen
+                ? "absolute inset-y-0 left-0 z-40 flex w-[86vw] max-w-[22rem] shadow-2xl"
+                : "hidden"
             } shrink-0 flex-col border-r border-zinc-200 bg-white lg:relative lg:w-[19rem] lg:shadow-none ${
               railCollapsed ? "lg:hidden" : "lg:flex"
             }`}
@@ -428,12 +539,8 @@ export function BuilderShell({
                     <div className="flex justify-center rounded-xl border border-zinc-200 p-3">
                       <TemplatePreview campaign={campaign} />
                     </div>
-                    <p className="text-[13px] font-semibold text-zinc-900">
-                      {activeLayout.name}
-                    </p>
-                    <p className="text-[11.5px] leading-snug text-zinc-500">
-                      {activeLayout.desc}
-                    </p>
+                    <p className="text-[13px] font-semibold text-zinc-900">{activeLayout.name}</p>
+                    <p className="text-[11.5px] leading-snug text-zinc-500">{activeLayout.desc}</p>
                     <button
                       onClick={() => setLayoutPicker(true)}
                       className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-zinc-200 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900"
@@ -442,7 +549,10 @@ export function BuilderShell({
                     </button>
                   </div>
 
-                  <Field label="Email subject" hint={`${stripHtml(campaign.meta.subject).length}/90`}>
+                  <Field
+                    label="Email subject"
+                    hint={`${stripHtml(campaign.meta.subject).length}/90`}
+                  >
                     <TextInput
                       value={campaign.meta.subject}
                       onChange={(v) => update((d) => void (d.meta.subject = v))}
@@ -468,44 +578,42 @@ export function BuilderShell({
                 open={!!openRail[2]}
                 onToggle={() => toggleRail(2)}
               >
-                  <div className="p-3">
-                    <p className="px-1.5 pb-2 text-[12px] font-medium text-zinc-500">
-                      Click a section to edit it in the side panel.
-                    </p>
-                    <ul>
-                      {ORDER.map((id) => {
-                        const visible = (campaign as any)[id].visible as boolean;
-                        const active = selected === id;
-                        return (
-                          <li key={id} className="mb-1 flex items-center gap-1">
-                            <button
-                              onClick={() => open(id)}
-                              aria-current={active}
-                              className={`flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left text-[13px] transition-colors ${
-                                active
-                                  ? "bg-zinc-900 text-white"
-                                  : "text-zinc-700 hover:bg-zinc-50"
-                              }`}
-                            >
-                              <Pencil size={13} className={active ? "opacity-80" : "text-zinc-400"} />
-                              <span className="flex-1 truncate">{BLOCK_LABELS[id]}</span>
-                            </button>
-                            <button
-                              onClick={() => update((d) => void (((d as any)[id].visible = !visible)))}
-                              aria-label={`${visible ? "Hide" : "Show"} ${BLOCK_LABELS[id]}`}
-                              title={visible ? "Hide section" : "Show section"}
-                              className="grid size-9 shrink-0 place-items-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
-                            >
-                              {visible ? <Eye size={15} /> : <EyeOff size={15} />}
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                  <div className="border-t border-zinc-100">
-                    <SenderForm campaign={campaign} update={update} />
-                  </div>
+                <div className="p-3">
+                  <p className="px-1.5 pb-2 text-[12px] font-medium text-zinc-500">
+                    Click a section to edit it in the side panel.
+                  </p>
+                  <ul>
+                    {ORDER.map((id) => {
+                      const visible = (campaign as any)[id].visible as boolean;
+                      const active = selected === id;
+                      return (
+                        <li key={id} className="mb-1 flex items-center gap-1">
+                          <button
+                            onClick={() => open(id)}
+                            aria-current={active}
+                            className={`flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left text-[13px] transition-colors ${
+                              active ? "bg-zinc-900 text-white" : "text-zinc-700 hover:bg-zinc-50"
+                            }`}
+                          >
+                            <Pencil size={13} className={active ? "opacity-80" : "text-zinc-400"} />
+                            <span className="flex-1 truncate">{BLOCK_LABELS[id]}</span>
+                          </button>
+                          <button
+                            onClick={() => update((d) => void ((d as any)[id].visible = !visible))}
+                            aria-label={`${visible ? "Hide" : "Show"} ${BLOCK_LABELS[id]}`}
+                            title={visible ? "Hide section" : "Show section"}
+                            className="grid size-9 shrink-0 place-items-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+                          >
+                            {visible ? <Eye size={15} /> : <EyeOff size={15} />}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+                <div className="border-t border-zinc-100">
+                  <SenderForm campaign={campaign} update={update} />
+                </div>
               </RailSection>
 
               <RailSection
@@ -622,22 +730,22 @@ export function BuilderShell({
 
           {/* Side-docked section editor (structured builder) */}
           {!floatingEditor && (
-          <EditorPanel
-            open={!!selected}
-            title={selected ? EDIT_TITLES[selected] : ""}
-            subtitle="Changes appear in the live preview instantly"
-            onClose={() => setSelected(null)}
-            footer={
-              <button
-                onClick={() => setSelected(null)}
-                className="h-10 w-full rounded-lg bg-zinc-900 text-[13px] font-medium text-white transition-colors hover:bg-zinc-800"
-              >
-                Done
-              </button>
-            }
-          >
-            {selected && <BlockForm id={selected} campaign={campaign} update={update} />}
-          </EditorPanel>
+            <EditorPanel
+              open={!!selected}
+              title={selected ? EDIT_TITLES[selected] : ""}
+              subtitle="Changes appear in the live preview instantly"
+              onClose={() => setSelected(null)}
+              footer={
+                <button
+                  onClick={() => setSelected(null)}
+                  className="h-10 w-full rounded-lg bg-zinc-900 text-[13px] font-medium text-white transition-colors hover:bg-zinc-800"
+                >
+                  Done
+                </button>
+              }
+            >
+              {selected && <BlockForm id={selected} campaign={campaign} update={update} />}
+            </EditorPanel>
           )}
         </div>
       </div>
@@ -694,7 +802,9 @@ export function BuilderShell({
                 >
                   <LayoutThumb id={l.id} />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[13.5px] font-semibold text-zinc-900">{l.name}</span>
+                    <span className="block text-[13.5px] font-semibold text-zinc-900">
+                      {l.name}
+                    </span>
                     <span className="mt-0.5 block text-[12px] leading-snug text-zinc-500">
                       {l.desc}
                     </span>
@@ -702,6 +812,126 @@ export function BuilderShell({
                   {layout === l.id && <Check size={17} className="shrink-0" />}
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Save options */}
+      {saveOpen && (
+        <div className="fixed inset-0 z-[95] grid place-items-center bg-zinc-900/50 p-4">
+          <div
+            role="dialog"
+            aria-label="Save template"
+            className="w-full max-w-md border border-zinc-200 bg-white p-6 shadow-2xl"
+          >
+            <p className="text-[15px] font-semibold tracking-tight">How would you like to save?</p>
+            <div className="mt-4 space-y-2.5">
+              <label
+                className={`block cursor-pointer border p-3.5 transition-colors ${
+                  saveMode === "new" ? "border-blue-600 bg-blue-50/60" : "border-zinc-200"
+                }`}
+              >
+                <span className="flex items-start gap-2.5">
+                  <input
+                    type="radio"
+                    checked={saveMode === "new"}
+                    onChange={() => setSaveMode("new")}
+                    className="mt-1 accent-blue-600"
+                  />
+                  <span>
+                    <span className="block text-[13.5px] font-semibold text-zinc-900">
+                      Save as new template{" "}
+                      <span className="font-medium text-blue-700">(Recommended)</span>
+                    </span>
+                    <span className="mt-0.5 block text-[12px] leading-relaxed text-zinc-500">
+                      Creates a new template while keeping the original unchanged.
+                    </span>
+                  </span>
+                </span>
+                {saveMode === "new" && (
+                  <input
+                    value={saveName}
+                    onChange={(e) => setSaveName(e.target.value)}
+                    aria-label="New template name"
+                    placeholder="Template name"
+                    className="mt-3 h-9 w-full border border-zinc-300 px-2.5 text-[13px] outline-none focus:border-blue-600"
+                  />
+                )}
+              </label>
+
+              {editing && (
+                <label
+                  className={`block cursor-pointer border p-3.5 transition-colors ${
+                    saveMode === "update" ? "border-blue-600 bg-blue-50/60" : "border-zinc-200"
+                  }`}
+                >
+                  <span className="flex items-start gap-2.5">
+                    <input
+                      type="radio"
+                      checked={saveMode === "update"}
+                      onChange={() => setSaveMode("update")}
+                      className="mt-1 accent-blue-600"
+                    />
+                    <span>
+                      <span className="block text-[13.5px] font-semibold text-zinc-900">
+                        Update {editing.shared ? "shared" : ""} template “{editing.name}”
+                      </span>
+                      <span className="mt-0.5 block text-[12px] leading-relaxed text-zinc-500">
+                        Updates it for future campaigns. Existing campaigns remain unchanged.
+                      </span>
+                    </span>
+                  </span>
+                </label>
+              )}
+            </div>
+            <div className="mt-5 flex justify-end gap-2.5">
+              <button
+                onClick={() => setSaveOpen(false)}
+                className="h-10 border border-zinc-300 px-5 text-[13px] font-medium text-zinc-800 transition-colors hover:bg-zinc-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={commitSave}
+                className="h-10 bg-blue-600 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700"
+              >
+                Save template
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Saved — hand back to the campaign */}
+      {savedTemplate && (
+        <div className="fixed inset-0 z-[96] grid place-items-center bg-zinc-900/50 p-4">
+          <div
+            role="dialog"
+            aria-label="Template saved"
+            className="w-full max-w-sm border border-zinc-200 bg-white p-6 text-center shadow-2xl"
+          >
+            <span className="mx-auto grid size-11 place-items-center bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200">
+              <Check size={20} />
+            </span>
+            <p className="mt-3 text-[15px] font-semibold tracking-tight">“{savedTemplate}” saved</p>
+            <p className="mt-1 text-[12.5px] leading-relaxed text-zinc-500">
+              It is already selected in your campaign&rsquo;s template library. Close this tab and
+              hit <strong className="font-semibold text-zinc-700">Use template</strong>.
+            </p>
+            <div className="mt-5 grid gap-2">
+              <button
+                onClick={() => window.close()}
+                className="h-10 bg-blue-600 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700"
+              >
+                Back to my campaign
+              </button>
+              <button
+                onClick={() => setSavedTemplate(null)}
+                className="h-10 border border-zinc-300 text-[13px] font-medium text-zinc-800 transition-colors hover:bg-zinc-50"
+              >
+                Keep editing
+              </button>
             </div>
           </div>
         </div>

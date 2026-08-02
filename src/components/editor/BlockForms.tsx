@@ -68,20 +68,44 @@ function VisibilityRow({
 function HeaderForm({ campaign: c, update }: Props) {
   return (
     <>
-      <VisibilityRow visible={c.header.visible} onChange={(v) => update((d) => void (d.header.visible = v))} />
-      <Group title="Logo">
+      <VisibilityRow
+        visible={c.header.visible}
+        onChange={(v) => update((d) => void (d.header.visible = v))}
+      />
+      <Group title="Logo · light mode">
         <ImageField
           value={c.header.logoUrl ?? ""}
           alt={c.header.logoText}
           onChange={(v) => update((d) => void (d.header.logoUrl = v || null))}
           onAltChange={(v) => update((d) => void (d.header.logoText = v))}
         />
+      </Group>
+      <Group title="Logo · dark mode">
+        <p className="-mt-1 text-[11.5px] leading-relaxed text-zinc-500">
+          Optional. Upload a light version of your logo for guests reading in dark mode. Leave empty
+          to reuse the light-mode logo.
+        </p>
+        <ImageField
+          value={c.header.logoUrlDark ?? ""}
+          alt={c.header.logoText}
+          onChange={(v) => update((d) => void (d.header.logoUrlDark = v || null))}
+          onAltChange={(v) => update((d) => void (d.header.logoText = v))}
+        />
+      </Group>
+      <Group title="Wordmark">
         <Field label="Fallback wordmark" hint="Used when no logo image">
-          <TextInput value={c.header.logoText} onChange={(v) => update((d) => void (d.header.logoText = v))} />
+          <TextInput
+            value={c.header.logoText}
+            onChange={(v) => update((d) => void (d.header.logoText = v))}
+          />
         </Field>
       </Group>
       <Group title="Style">
-        <ColorField label="Background" value={c.header.bg} onChange={(v) => update((d) => void (d.header.bg = v))} />
+        <ColorField
+          label="Background"
+          value={c.header.bg}
+          onChange={(v) => update((d) => void (d.header.bg = v))}
+        />
         <SliderField
           label="Padding"
           value={c.header.padding}
@@ -105,7 +129,10 @@ function HeaderForm({ campaign: c, update }: Props) {
 function HeroForm({ campaign: c, update }: Props) {
   return (
     <>
-      <VisibilityRow visible={c.hero.visible} onChange={(v) => update((d) => void (d.hero.visible = v))} />
+      <VisibilityRow
+        visible={c.hero.visible}
+        onChange={(v) => update((d) => void (d.hero.visible = v))}
+      />
       <Group title="Image">
         <ImageField
           value={c.hero.imageUrl}
@@ -115,10 +142,33 @@ function HeroForm({ campaign: c, update }: Props) {
         />
       </Group>
       <Group title="Style">
-        <SliderField label="Height" value={c.hero.height} min={80} max={480} onChange={(v) => update((d) => void (d.hero.height = v))} />
-        <SliderField label="Corner radius" value={c.hero.radius} min={0} max={40} onChange={(v) => update((d) => void (d.hero.radius = v))} />
-        <ColorField label="Overlay color" value={c.hero.overlayColor} onChange={(v) => update((d) => void (d.hero.overlayColor = v))} />
-        <SliderField label="Overlay opacity" unit="%" value={c.hero.overlay} min={0} max={90} onChange={(v) => update((d) => void (d.hero.overlay = v))} />
+        <SliderField
+          label="Height"
+          value={c.hero.height}
+          min={80}
+          max={480}
+          onChange={(v) => update((d) => void (d.hero.height = v))}
+        />
+        <SliderField
+          label="Corner radius"
+          value={c.hero.radius}
+          min={0}
+          max={40}
+          onChange={(v) => update((d) => void (d.hero.radius = v))}
+        />
+        <ColorField
+          label="Overlay color"
+          value={c.hero.overlayColor}
+          onChange={(v) => update((d) => void (d.hero.overlayColor = v))}
+        />
+        <SliderField
+          label="Overlay opacity"
+          unit="%"
+          value={c.hero.overlay}
+          min={0}
+          max={90}
+          onChange={(v) => update((d) => void (d.hero.overlay = v))}
+        />
       </Group>
     </>
   );
@@ -129,7 +179,10 @@ function HeroForm({ campaign: c, update }: Props) {
 function BodyForm({ campaign: c, update }: Props) {
   return (
     <>
-      <VisibilityRow visible={c.body.visible} onChange={(v) => update((d) => void (d.body.visible = v))} />
+      <VisibilityRow
+        visible={c.body.visible}
+        onChange={(v) => update((d) => void (d.body.visible = v))}
+      />
       <Group title="Heading">
         <RichTextEditor
           label="Heading text"
@@ -137,8 +190,18 @@ function BodyForm({ campaign: c, update }: Props) {
           value={c.body.heading}
           onChange={(v) => update((d) => void (d.body.heading = v))}
         />
-        <SliderField label="Size" value={c.body.headingSize} min={14} max={48} onChange={(v) => update((d) => void (d.body.headingSize = v))} />
-        <ColorField label="Color" value={c.body.headingColor} onChange={(v) => update((d) => void (d.body.headingColor = v))} />
+        <SliderField
+          label="Size"
+          value={c.body.headingSize}
+          min={14}
+          max={48}
+          onChange={(v) => update((d) => void (d.body.headingSize = v))}
+        />
+        <ColorField
+          label="Color"
+          value={c.body.headingColor}
+          onChange={(v) => update((d) => void (d.body.headingColor = v))}
+        />
       </Group>
 
       <Group
@@ -223,45 +286,109 @@ function BodyForm({ campaign: c, update }: Props) {
       </Group>
 
       <Group title="Body style">
-        <SliderField label="Text size" value={c.body.textSize} min={11} max={22} onChange={(v) => update((d) => void (d.body.textSize = v))} />
-        <ColorField label="Text color" value={c.body.textColor} onChange={(v) => update((d) => void (d.body.textColor = v))} />
-        <SegmentedField label="Alignment" value={c.body.align} options={ALIGN_OPTS} onChange={(v) => update((d) => void (d.body.align = v))} />
+        <SliderField
+          label="Text size"
+          value={c.body.textSize}
+          min={11}
+          max={22}
+          onChange={(v) => update((d) => void (d.body.textSize = v))}
+        />
+        <ColorField
+          label="Text color"
+          value={c.body.textColor}
+          onChange={(v) => update((d) => void (d.body.textColor = v))}
+        />
+        <SegmentedField
+          label="Alignment"
+          value={c.body.align}
+          options={ALIGN_OPTS}
+          onChange={(v) => update((d) => void (d.body.align = v))}
+        />
       </Group>
     </>
   );
 }
-
 
 /* ----------------------------------- CTA ---------------------------------- */
 
 function CtaForm({ campaign: c, update }: Props) {
   return (
     <>
-      <VisibilityRow visible={c.cta.visible} onChange={(v) => update((d) => void (d.cta.visible = v))} />
+      <VisibilityRow
+        visible={c.cta.visible}
+        onChange={(v) => update((d) => void (d.cta.visible = v))}
+      />
       <Group title="Button">
         <Field label="Label">
           <TextInput value={c.cta.label} onChange={(v) => update((d) => void (d.cta.label = v))} />
         </Field>
         <Field label="Destination URL">
-          <TextInput value={c.cta.url} onChange={(v) => update((d) => void (d.cta.url = v))} placeholder="https://…" />
+          <TextInput
+            value={c.cta.url}
+            onChange={(v) => update((d) => void (d.cta.url = v))}
+            placeholder="https://…"
+          />
         </Field>
       </Group>
       <Group title="Appearance">
         <div className="grid grid-cols-2 gap-2">
-          <ColorField label="Background" value={c.cta.bg} onChange={(v) => update((d) => void (d.cta.bg = v))} />
-          <ColorField label="Text" value={c.cta.color} onChange={(v) => update((d) => void (d.cta.color = v))} />
+          <ColorField
+            label="Background"
+            value={c.cta.bg}
+            onChange={(v) => update((d) => void (d.cta.bg = v))}
+          />
+          <ColorField
+            label="Text"
+            value={c.cta.color}
+            onChange={(v) => update((d) => void (d.cta.color = v))}
+          />
         </div>
-        <SliderField label="Corner radius" value={c.cta.radius} min={0} max={32} onChange={(v) => update((d) => void (d.cta.radius = v))} />
+        <SliderField
+          label="Corner radius"
+          value={c.cta.radius}
+          min={0}
+          max={32}
+          onChange={(v) => update((d) => void (d.cta.radius = v))}
+        />
         <div className="grid grid-cols-2 gap-2">
-          <SliderField label="Pad Y" value={c.cta.padY} min={6} max={28} onChange={(v) => update((d) => void (d.cta.padY = v))} />
-          <SliderField label="Pad X" value={c.cta.padX} min={8} max={60} onChange={(v) => update((d) => void (d.cta.padX = v))} />
+          <SliderField
+            label="Pad Y"
+            value={c.cta.padY}
+            min={6}
+            max={28}
+            onChange={(v) => update((d) => void (d.cta.padY = v))}
+          />
+          <SliderField
+            label="Pad X"
+            value={c.cta.padX}
+            min={8}
+            max={60}
+            onChange={(v) => update((d) => void (d.cta.padX = v))}
+          />
         </div>
-        <SegmentedField label="Alignment" value={c.cta.align} options={ALIGN_OPTS} onChange={(v) => update((d) => void (d.cta.align = v))} />
-        <ToggleRow label="Full width" checked={c.cta.fullWidth} onChange={(v) => update((d) => void (d.cta.fullWidth = v))} />
+        <SegmentedField
+          label="Alignment"
+          value={c.cta.align}
+          options={ALIGN_OPTS}
+          onChange={(v) => update((d) => void (d.cta.align = v))}
+        />
+        <ToggleRow
+          label="Full width"
+          checked={c.cta.fullWidth}
+          onChange={(v) => update((d) => void (d.cta.fullWidth = v))}
+        />
       </Group>
       <Group title="Tracking">
-        <ToggleRow label="Open in new tab" checked={c.cta.newTab} onChange={(v) => update((d) => void (d.cta.newTab = v))} />
-        <ToggleRow label="Append UTM parameters" checked={c.cta.utm} onChange={(v) => update((d) => void (d.cta.utm = v))} />
+        <ToggleRow
+          label="Open in new tab"
+          checked={c.cta.newTab}
+          onChange={(v) => update((d) => void (d.cta.newTab = v))}
+        />
+        <ToggleRow
+          label="Append UTM parameters"
+          checked={c.cta.utm}
+          onChange={(v) => update((d) => void (d.cta.utm = v))}
+        />
       </Group>
     </>
   );
@@ -272,7 +399,10 @@ function CtaForm({ campaign: c, update }: Props) {
 function DetailsForm({ campaign: c, update }: Props) {
   return (
     <>
-      <VisibilityRow visible={c.details.visible} onChange={(v) => update((d) => void (d.details.visible = v))} />
+      <VisibilityRow
+        visible={c.details.visible}
+        onChange={(v) => update((d) => void (d.details.visible = v))}
+      />
       <Group title="Layout">
         <SegmentedField
           label="Columns"
@@ -284,7 +414,13 @@ function DetailsForm({ campaign: c, update }: Props) {
           ]}
           onChange={(v) => update((d) => void (d.details.columns = v))}
         />
-        <SliderField label="Gap" value={c.details.gap} min={4} max={48} onChange={(v) => update((d) => void (d.details.gap = v))} />
+        <SliderField
+          label="Gap"
+          value={c.details.gap}
+          min={4}
+          max={48}
+          onChange={(v) => update((d) => void (d.details.gap = v))}
+        />
       </Group>
       <Group
         title="Items"
@@ -381,24 +517,56 @@ function SocialIcon({ skey, color }: { skey: string; color: string }) {
 function FooterForm({ campaign: c, update }: Props) {
   return (
     <>
-      <VisibilityRow visible={c.footer.visible} onChange={(v) => update((d) => void (d.footer.visible = v))} />
+      <VisibilityRow
+        visible={c.footer.visible}
+        onChange={(v) => update((d) => void (d.footer.visible = v))}
+      />
       <Group title="Business details">
         <Field label="Company">
-          <TextInput value={c.footer.company} onChange={(v) => update((d) => void (d.footer.company = v))} />
+          <TextInput
+            value={c.footer.company}
+            onChange={(v) => update((d) => void (d.footer.company = v))}
+          />
         </Field>
         <Field label="Address" hint="Required for CAN-SPAM">
-          <TextArea rows={2} value={c.footer.address} onChange={(v) => update((d) => void (d.footer.address = v))} />
+          <TextArea
+            rows={2}
+            value={c.footer.address}
+            onChange={(v) => update((d) => void (d.footer.address = v))}
+          />
         </Field>
         <div className="grid grid-cols-2 gap-2">
-          <ColorField label="Background" value={c.footer.bg} onChange={(v) => update((d) => void (d.footer.bg = v))} />
-          <ColorField label="Text" value={c.footer.text} onChange={(v) => update((d) => void (d.footer.text = v))} />
+          <ColorField
+            label="Background"
+            value={c.footer.bg}
+            onChange={(v) => update((d) => void (d.footer.bg = v))}
+          />
+          <ColorField
+            label="Text"
+            value={c.footer.text}
+            onChange={(v) => update((d) => void (d.footer.text = v))}
+          />
         </div>
       </Group>
       <Group title="Social links">
         <div className="grid grid-cols-3 gap-2">
-          <ColorField label="Icon bg" value={c.footer.socialBg} onChange={(v) => update((d) => void (d.footer.socialBg = v))} />
-          <ColorField label="Icon" value={c.footer.socialColor} onChange={(v) => update((d) => void (d.footer.socialColor = v))} />
-          <SliderField label="Radius" value={c.footer.socialRadius} min={0} max={20} onChange={(v) => update((d) => void (d.footer.socialRadius = v))} />
+          <ColorField
+            label="Icon bg"
+            value={c.footer.socialBg}
+            onChange={(v) => update((d) => void (d.footer.socialBg = v))}
+          />
+          <ColorField
+            label="Icon"
+            value={c.footer.socialColor}
+            onChange={(v) => update((d) => void (d.footer.socialColor = v))}
+          />
+          <SliderField
+            label="Radius"
+            value={c.footer.socialRadius}
+            min={0}
+            max={20}
+            onChange={(v) => update((d) => void (d.footer.socialRadius = v))}
+          />
         </div>
         {/* Live preview of the social icon styling */}
         <div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5">
@@ -514,10 +682,16 @@ export function SenderForm({ campaign: c, update }: Props) {
       </Field>
       <div className="grid grid-cols-2 gap-3">
         <Field label="From name">
-          <TextInput value={c.meta.fromName} onChange={(v) => update((d) => void (d.meta.fromName = v))} />
+          <TextInput
+            value={c.meta.fromName}
+            onChange={(v) => update((d) => void (d.meta.fromName = v))}
+          />
         </Field>
         <Field label="From email">
-          <TextInput value={c.meta.fromEmail} onChange={(v) => update((d) => void (d.meta.fromEmail = v))} />
+          <TextInput
+            value={c.meta.fromEmail}
+            onChange={(v) => update((d) => void (d.meta.fromEmail = v))}
+          />
         </Field>
       </div>
     </Group>
@@ -536,10 +710,22 @@ export function ThemeForm({ campaign: c, update }: Props) {
     <>
       <Group title="Colours">
         <div className="grid grid-cols-2 gap-3">
-          <ColorField label="Accent" value={c.theme.accent} onChange={(v) => update((d) => void (d.theme.accent = v))} />
-          <ColorField label="Email background" value={c.theme.cardBg} onChange={(v) => update((d) => void (d.theme.cardBg = v))} />
+          <ColorField
+            label="Accent"
+            value={c.theme.accent}
+            onChange={(v) => update((d) => void (d.theme.accent = v))}
+          />
+          <ColorField
+            label="Email background"
+            value={c.theme.cardBg}
+            onChange={(v) => update((d) => void (d.theme.cardBg = v))}
+          />
         </div>
-        <ColorField label="Canvas background" value={c.theme.pageBg} onChange={(v) => update((d) => void (d.theme.pageBg = v))} />
+        <ColorField
+          label="Canvas background"
+          value={c.theme.pageBg}
+          onChange={(v) => update((d) => void (d.theme.pageBg = v))}
+        />
         <Field label="Apply accent to">
           <div className="flex gap-2">
             <button

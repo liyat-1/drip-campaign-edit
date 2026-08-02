@@ -45,7 +45,7 @@ import { TemplatePicker } from "./TemplatePicker";
 import { TagTextArea, type TagDef } from "./TagTextArea";
 import { useCampaign } from "@/lib/useCampaign";
 import { createCanvasCampaign } from "@/lib/campaign";
-import { EMAIL_TEMPLATES } from "@/lib/templates";
+import { getTemplate } from "@/lib/templateStore";
 import { stripHtml } from "@/lib/richtext";
 import heroAmalfi from "@/assets/hero-amalfi.jpg";
 import heroValley from "@/assets/hero-valley.jpg";
@@ -122,7 +122,11 @@ const MERGE_TAGS: (TagDef & { chip: string })[] = [
 ];
 
 type EmailMode = "desktop" | "mobile" | "inbox" | "dark";
-const EMAIL_MODES: { id: EmailMode; label: string; Icon: React.ComponentType<{ size?: number }> }[] = [
+const EMAIL_MODES: {
+  id: EmailMode;
+  label: string;
+  Icon: React.ComponentType<{ size?: number }>;
+}[] = [
   { id: "desktop", label: "Desktop", Icon: Monitor },
   { id: "mobile", label: "Mobile", Icon: Smartphone },
   { id: "inbox", label: "Inbox", Icon: InboxIcon },
@@ -134,11 +138,18 @@ const RECENT_FILES = [
   { name: "hero-valley.jpg", url: heroValley },
 ];
 
-export function CampaignWizard() {
-  const { campaign, update } = useCampaign(createCanvasCampaign);
+/** New campaigns open immediately — no naming gate. The auto title is
+ * editable inline from the header, Figma style. */
+function newDraftCampaign() {
+  const c = createCanvasCampaign();
+  c.meta.name = "Untitled campaign";
+  return c;
+}
 
-  const [created, setCreated] = useState(false);
-  const [draftName, setDraftName] = useState("Campaign - new");
+export function CampaignWizard() {
+  const { campaign, update } = useCampaign(newDraftCampaign);
+
+  const [nameFocused, setNameFocused] = useState(false);
 
   const [step, setStep] = useState<Step>("preferences");
   const [channel, setChannel] = useState<Channel | null>(null);
@@ -157,6 +168,7 @@ export function CampaignWizard() {
     3: true,
     4: true,
     5: true,
+    6: true,
   });
 
   const toggleRail = (i: number) => setOpenRail((s) => ({ ...s, [i]: !s[i] }));
@@ -191,9 +203,19 @@ export function CampaignWizard() {
   };
 
   const guests =
-    audience === "everyone" ? 1840 : audience === "past_90" ? 412 : audience === "loyalty" ? 268 : 733;
+    audience === "everyone"
+      ? 1840
+      : audience === "past_90"
+        ? 412
+        : audience === "loyalty"
+          ? 268
+          : 733;
   const templateReady = hasEmail(channel) && templateId !== null;
-  const contentReady = hasText(channel) ? (hasEmail(channel) ? templateReady : true) : templateReady;
+  const contentReady = hasText(channel)
+    ? hasEmail(channel)
+      ? templateReady
+      : true
+    : templateReady;
   const cost = hasText(channel) ? (guests * 0.06).toFixed(2) : "0.00";
 
   const activeTab: "text" | "email" =
@@ -202,7 +224,7 @@ export function CampaignWizard() {
   /* Selecting a content block in the email preview opens a floating editor
    * anchored to it — same mechanic as the template studio. */
   const emailEditing =
-    created && step === "content" && activeTab === "email" && templateReady && emailMode !== "inbox";
+    step === "content" && activeTab === "email" && templateReady && emailMode !== "inbox";
   const floatingBlock =
     emailEditing && openBlock && EDITABLE_BLOCKS.includes(openBlock) ? openBlock : null;
   const anchor = useAnchorRect(floatingBlock, !!floatingBlock, [
@@ -211,60 +233,6 @@ export function CampaignWizard() {
     step,
     expanded,
   ]);
-
-
-
-  /* ---------------- Step 0 · name the campaign ---------------- */
-  if (!created) {
-    return (
-      <div className="grid min-h-dvh place-items-center bg-zinc-900/70 p-4 font-sans text-zinc-900">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!draftName.trim()) return;
-            update((d) => void (d.meta.name = draftName.trim()));
-            setCreated(true);
-          }}
-          className="w-full max-w-md overflow-hidden rounded-md bg-white shadow-2xl"
-        >
-          <div className="flex items-start justify-between gap-3 px-6 pb-4 pt-5">
-            <div>
-              <h1 className="text-[17px] font-semibold tracking-tight">Create new campaign</h1>
-              <p className="mt-0.5 text-[12.5px] text-zinc-500">
-                Name it now — you pick the channel on the next screen.
-              </p>
-            </div>
-            <Link
-              to="/"
-              aria-label="Cancel"
-              className="grid size-8 place-items-center rounded-md text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
-            >
-              <X size={17} />
-            </Link>
-          </div>
-          <div className="border-y border-zinc-100 bg-zinc-50/70 px-6 py-5">
-            <Field label="Drip campaign name">
-              <TextInput value={draftName} onChange={setDraftName} placeholder="Summer reactivation" />
-            </Field>
-          </div>
-          <div className="flex items-center justify-end gap-2.5 px-6 py-4">
-            <Link
-              to="/"
-              className="grid h-10 place-items-center rounded-md border border-zinc-200 px-5 text-[13px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
-            >
-              Cancel
-            </Link>
-            <button
-              type="submit"
-              className="h-10 rounded-md bg-blue-600 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700"
-            >
-              Continue
-            </button>
-          </div>
-        </form>
-      </div>
-    );
-  }
 
   /* ---------------- Minimised chip ---------------- */
   if (minimized) {
@@ -317,13 +285,33 @@ export function CampaignWizard() {
       >
         {/* Chrome */}
         <header className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-zinc-200 bg-white px-3 py-2.5 sm:px-4">
-          <div className="flex min-w-0 items-center gap-2">
-            <input
-              value={campaign.meta.name}
-              aria-label="Campaign name"
-              onChange={(e) => update((d) => void (d.meta.name = e.target.value))}
-              className="min-w-0 max-w-[20rem] flex-1 truncate rounded-md px-2 py-1.5 text-[14px] font-semibold outline-none transition-colors hover:bg-zinc-100 focus:bg-zinc-100"
-            />
+          <div className="flex min-w-0 items-center gap-1.5">
+            <label className="group flex min-w-0 items-center gap-1.5 border border-transparent px-1 transition-colors hover:border-zinc-200 focus-within:border-blue-600">
+              <input
+                value={campaign.meta.name}
+                aria-label="Campaign name — click to rename"
+                title="Click to rename this campaign"
+                placeholder="Untitled campaign"
+                onFocus={(e) => {
+                  setNameFocused(true);
+                  e.currentTarget.select();
+                }}
+                onBlur={(e) => {
+                  setNameFocused(false);
+                  if (!e.target.value.trim())
+                    update((d) => void (d.meta.name = "Untitled campaign"));
+                }}
+                onChange={(e) => update((d) => void (d.meta.name = e.target.value))}
+                className="min-w-0 max-w-[20rem] flex-1 truncate bg-transparent px-1 py-1.5 text-[14px] font-semibold outline-none"
+              />
+              <Pencil
+                size={13}
+                aria-hidden
+                className={`shrink-0 transition-opacity ${
+                  nameFocused ? "text-blue-600" : "text-zinc-400 opacity-60 group-hover:opacity-100"
+                }`}
+              />
+            </label>
             {channel && (
               <span className="hidden shrink-0 items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-1 text-[11px] font-medium text-zinc-600 sm:flex">
                 {channel === "email" ? (
@@ -346,7 +334,12 @@ export function CampaignWizard() {
             >
               Save changes
             </button>
-            <button className={chromeBtn} onClick={() => setMinimized(true)} aria-label="Minimise" title="Minimise">
+            <button
+              className={chromeBtn}
+              onClick={() => setMinimized(true)}
+              aria-label="Minimise"
+              title="Minimise"
+            >
               <Minus size={16} />
             </button>
             <button
@@ -417,11 +410,8 @@ export function CampaignWizard() {
           </ol>
         </nav>
 
-
         {/* Body: editor rail + preview */}
-        <div
-          className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[26rem_minmax(0,1fr)]"
-        >
+        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[26rem_minmax(0,1fr)]">
           {/* Left rail — structured-builder rhythm */}
           <aside className="flex min-h-0 flex-col overflow-hidden border-r border-zinc-200 bg-white">
             <div className="flex shrink-0 items-center justify-between border-b border-zinc-100 px-3 py-2">
@@ -442,7 +432,6 @@ export function CampaignWizard() {
                   toggle={toggleRail}
                 />
               )}
-
 
               {step === "content" && (
                 <ContentRail
@@ -467,6 +456,8 @@ export function CampaignWizard() {
                   setOpenBlock={setOpenBlock}
                   openRail={openRail}
                   toggle={toggleRail}
+                  sequence={sequence}
+                  setSequence={setSequence}
                   onTest={(kind) => notify(`Test ${kind} sent`)}
                 />
               )}
@@ -489,8 +480,6 @@ export function CampaignWizard() {
                   setValidFrom={setValidFrom}
                   validTo={validTo}
                   setValidTo={setValidTo}
-                  sequence={sequence}
-                  setSequence={setSequence}
                   audience={audience}
                   setAudience={setAudience}
                   startDate={startDate}
@@ -504,7 +493,6 @@ export function CampaignWizard() {
                   channel={channel}
                   openRail={openRail}
                   toggle={toggleRail}
-
                 />
               )}
             </div>
@@ -512,108 +500,110 @@ export function CampaignWizard() {
 
           {/* Right preview column */}
           <section className="relative hidden min-h-0 flex-col overflow-hidden bg-zinc-100 lg:flex">
-              <PreviewHeader
-                step={step}
-                activeTab={activeTab}
-                channel={channel}
-                templateReady={templateReady}
-                emailMode={emailMode}
-                setEmailMode={setEmailMode}
-              />
+            <PreviewHeader
+              step={step}
+              activeTab={activeTab}
+              channel={channel}
+              templateReady={templateReady}
+              emailMode={emailMode}
+              setEmailMode={setEmailMode}
+            />
 
-              <div
-                className="min-h-0 flex-1 overflow-y-auto p-6"
-                style={{
-                  background:
-                    step === "content" && activeTab === "email" && emailMode === "dark"
-                      ? "#141518"
-                      : undefined,
-                }}
-              >
-                {/* Preferences preview */}
-                {step === "preferences" && (
-                  <PreferencesPreview
-                    channel={channel}
+            <div
+              className="min-h-0 flex-1 overflow-y-auto p-6"
+              style={{
+                background:
+                  step === "content" && activeTab === "email" && emailMode === "dark"
+                    ? "#141518"
+                    : undefined,
+              }}
+            >
+              {/* Preferences preview */}
+              {step === "preferences" && (
+                <PreferencesPreview
+                  channel={channel}
+                  message={message}
+                  link={link}
+                  textMedia={textMedia}
+                  campaign={campaign}
+                  templateReady={templateReady}
+                  onChooseDesign={() => setPicker(true)}
+                />
+              )}
+
+              {/* Content · Text */}
+              {step === "content" && activeTab === "text" && hasText(channel) && (
+                <div className="flex justify-center">
+                  <SmsPreview
                     message={message}
-                    link={link}
-                    textMedia={textMedia}
-                    campaign={campaign}
-                    templateReady={templateReady}
-                    onChooseDesign={() => setPicker(true)}
+                    link={useCustomLink ? link : undefined}
+                    imageUrl={textMedia}
+                    sender={campaign.footer.company || campaign.header.logoText}
+                    scale={0.8}
                   />
-                )}
+                </div>
+              )}
 
-                {/* Content · Text */}
-                {step === "content" && activeTab === "text" && hasText(channel) && (
-                  <div className="flex justify-center">
-                    <SmsPreview
-                      message={message}
-                      link={useCustomLink ? link : undefined}
-                      imageUrl={textMedia}
-                      sender={campaign.footer.company || campaign.header.logoText}
-                      scale={0.8}
-                    />
-                  </div>
-                )}
-
-                {/* Content · Email */}
-                {step === "content" && activeTab === "email" && hasEmail(channel) && !templateReady && (
+              {/* Content · Email */}
+              {step === "content" &&
+                activeTab === "email" &&
+                hasEmail(channel) &&
+                !templateReady && (
                   <NoTemplatePreview onChoose={() => setPicker(true)} campaign={campaign} />
                 )}
 
-                {step === "content" &&
-                  activeTab === "email" &&
-                  templateReady &&
-                  (emailMode === "inbox" ? (
-                    <InboxPreview campaign={campaign} />
-                  ) : emailMode === "mobile" ? (
-                    <div className="flex justify-center">
-                      <PhoneMockup scale={0.78}>
-                        <EmailPreview
-                          campaign={campaign}
-                          interactive
-                          inlineEdit
-                          update={update}
-                          selected={openBlock}
-                          onSelect={setOpenBlock}
-                          lockedBlocks={LOCKED_BLOCKS}
-                          width={373}
-                        />
-                      </PhoneMockup>
-                    </div>
-                  ) : (
-                    <EmailPreview
-                      campaign={campaign}
-                      interactive
-                      inlineEdit
-                      update={update}
-                      selected={openBlock}
-                      onSelect={setOpenBlock}
-                      lockedBlocks={LOCKED_BLOCKS}
-                      width={600}
-                      dark={emailMode === "dark"}
-                    />
-                  ))}
-
-                {/* Promotion preview — a plain, larger card (no device frame) */}
-                {step === "promotion" && (
+              {step === "content" &&
+                activeTab === "email" &&
+                templateReady &&
+                (emailMode === "inbox" ? (
+                  <InboxPreview campaign={campaign} />
+                ) : emailMode === "mobile" ? (
                   <div className="flex justify-center">
-                    <div className="w-full max-w-lg">
-                      <PromoPreviewCard
-                        accent={campaign.theme.accent}
-                        hotel={campaign.footer.company || campaign.header.logoText}
-                        firstName="Liyat"
-                        tagline={tagline}
-                        discount={discount}
-                        enabled={promoOn}
+                    <PhoneMockup scale={0.78}>
+                      <EmailPreview
+                        campaign={campaign}
+                        interactive
+                        inlineEdit
+                        update={update}
+                        selected={openBlock}
+                        onSelect={setOpenBlock}
+                        lockedBlocks={LOCKED_BLOCKS}
+                        width={373}
                       />
-                    </div>
+                    </PhoneMockup>
                   </div>
-                )}
-                {!showPreview && <NoChannelPreview />}
-              </div>
-            </section>
+                ) : (
+                  <EmailPreview
+                    campaign={campaign}
+                    interactive
+                    inlineEdit
+                    update={update}
+                    selected={openBlock}
+                    onSelect={setOpenBlock}
+                    lockedBlocks={LOCKED_BLOCKS}
+                    width={600}
+                    dark={emailMode === "dark"}
+                  />
+                ))}
 
+              {/* Promotion preview — a plain, larger card (no device frame) */}
+              {step === "promotion" && (
+                <div className="flex justify-center">
+                  <div className="w-full max-w-lg">
+                    <PromoPreviewCard
+                      accent={campaign.theme.accent}
+                      hotel={campaign.footer.company || campaign.header.logoText}
+                      firstName="Liyat"
+                      tagline={tagline}
+                      discount={discount}
+                      enabled={promoOn}
+                    />
+                  </div>
+                </div>
+              )}
+              {!showPreview && <NoChannelPreview />}
+            </div>
+          </section>
         </div>
 
         {/* Footer */}
@@ -696,7 +686,6 @@ function PreferencesRail(props: {
   openRail: Record<number, boolean>;
   toggle: (i: number) => void;
 }) {
-
   const { channel, setChannel, openRail, toggle } = props;
   return (
     <>
@@ -766,6 +755,8 @@ function ContentRail(props: {
   setOpenBlock: (b: BlockId | null) => void;
   openRail: Record<number, boolean>;
   toggle: (i: number) => void;
+  sequence: boolean;
+  setSequence: (v: boolean) => void;
   onTest: (kind: "email" | "text") => void;
 }) {
   const {
@@ -785,9 +776,7 @@ function ContentRail(props: {
   const showTabs = channel === "both" || channel === "text_fallback";
   const textRef = useRef<HTMLDivElement | null>(null);
   const insertToken = (token: string) => {
-    const fn = (textRef.current as any)?.__insertToken as
-      | ((t: string) => void)
-      | undefined;
+    const fn = (textRef.current as any)?.__insertToken as ((t: string) => void) | undefined;
     if (fn) fn(token);
     else props.setMessage(`${props.message} ${token}`.trim());
   };
@@ -797,12 +786,10 @@ function ContentRail(props: {
       {showTabs && (
         <div className="border-b border-zinc-100 p-3">
           <div className="flex rounded-md bg-zinc-100 p-1">
-            {(
-              [
-                { id: "text" as const, Icon: MessageSquare, label: "Text content" },
-                { id: "email" as const, Icon: Mail, label: "Email design" },
-              ]
-            ).map((t) => (
+            {[
+              { id: "text" as const, Icon: MessageSquare, label: "Text content" },
+              { id: "email" as const, Icon: Mail, label: "Email design" },
+            ].map((t) => (
               <button
                 key={t.id}
                 onClick={() => setContentTab(t.id)}
@@ -951,7 +938,7 @@ function ContentRail(props: {
                 <ScaledEmail campaign={campaign} width={92} height={66} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-semibold text-zinc-900">
-                    {EMAIL_TEMPLATES.find((t) => t.id === templateId)?.name}
+                    {getTemplate(templateId)?.name ?? "Selected design"}
                   </p>
                   <p className="text-[11.5px] text-zinc-500">Selected design</p>
                 </div>
@@ -1010,9 +997,7 @@ function ContentRail(props: {
                         {BLOCK_LABELS[id]}
                       </span>
                     </span>
-                    <span className="text-[11px] text-zinc-400">
-                      {active ? "Editing" : "Edit"}
-                    </span>
+                    <span className="text-[11px] text-zinc-400">{active ? "Editing" : "Edit"}</span>
                   </button>
                 );
               })}
@@ -1021,7 +1006,6 @@ function ContentRail(props: {
               </p>
             </div>
           </RailSection>
-
 
           <RailSection
             index={3}
@@ -1078,6 +1062,26 @@ function ContentRail(props: {
           </RailSection>
         </>
       )}
+
+      {((activeTab === "text" && hasText(channel)) ||
+        (activeTab === "email" && hasEmail(channel) && templateId !== null)) && (
+        <RailSection
+          index={activeTab === "text" ? 4 : 5}
+          title="Follow-ups"
+          hint="Automatic reminders after this message"
+          open={!!openRail[6]}
+          onToggle={() => toggle(6)}
+        >
+          <div className="p-4">
+            <ToggleRow
+              label="Enable message sequence"
+              hint="Send automatic follow-ups with configurable delays if a guest doesn't book."
+              checked={props.sequence}
+              onChange={props.setSequence}
+            />
+          </div>
+        </RailSection>
+      )}
     </>
   );
 }
@@ -1101,8 +1105,6 @@ function PromotionRail(props: {
   setValidFrom: (v: string) => void;
   validTo: string;
   setValidTo: (v: string) => void;
-  sequence: boolean;
-  setSequence: (v: boolean) => void;
   audience: string;
   setAudience: (v: string) => void;
   startDate: string;
@@ -1240,13 +1242,6 @@ function PromotionRail(props: {
             checked={props.cutOff}
             onChange={props.setCutOff}
           />
-          <div className="h-px bg-zinc-100" />
-          <ToggleRow
-            label="Enable message sequence"
-            hint="Send automatic follow-ups with configurable delays."
-            checked={props.sequence}
-            onChange={props.setSequence}
-          />
         </div>
       </RailSection>
 
@@ -1293,7 +1288,6 @@ function PromotionRail(props: {
   );
 }
 
-
 /* ===================== Preview column header + previews ===================== */
 
 function PreviewHeader({
@@ -1311,8 +1305,7 @@ function PreviewHeader({
   emailMode: EmailMode;
   setEmailMode: (m: EmailMode) => void;
 }) {
-  const showEmailModes =
-    step === "content" && activeTab === "email" && templateReady;
+  const showEmailModes = step === "content" && activeTab === "email" && templateReady;
   const label =
     step === "preferences"
       ? channel
@@ -1481,7 +1474,6 @@ function NoChannelPreview() {
 }
 
 /* ===================== Shared bits ===================== */
-
 
 function ChannelCard({
   active,
@@ -1683,7 +1675,9 @@ function PromoPreviewCard({
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className={`font-semibold uppercase tracking-[0.18em] text-white/70 ${compact ? "text-[9px]" : "text-[10.5px]"}`}>
+          <p
+            className={`font-semibold uppercase tracking-[0.18em] text-white/70 ${compact ? "text-[9px]" : "text-[10.5px]"}`}
+          >
             Exclusive offer
           </p>
           <p className={`mt-1 font-semibold ${compact ? "text-[13px]" : "text-[15px]"}`}>

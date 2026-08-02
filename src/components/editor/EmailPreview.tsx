@@ -18,7 +18,13 @@ const SOCIAL_PATHS: Record<SocialKey, string> = {
 /** Readable ink color for a given background. */
 function onColor(bg: string) {
   const hex = bg.replace("#", "");
-  const full = hex.length === 3 ? hex.split("").map((h) => h + h).join("") : hex;
+  const full =
+    hex.length === 3
+      ? hex
+          .split("")
+          .map((h) => h + h)
+          .join("")
+      : hex;
   const n = parseInt(full || "ffffff", 16);
   const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
   const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
@@ -100,7 +106,6 @@ function Block({
   );
 }
 
-
 function Editable({
   html,
   onCommit,
@@ -139,8 +144,6 @@ function Editable({
     />
   );
 }
-
-
 
 export function EmailPreview({
   campaign: c,
@@ -181,7 +184,15 @@ export function EmailPreview({
       }}
     >
       {c.header.visible && (
-        <Block id="header" label="Header" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent} locked={isLocked("header")}>
+        <Block
+          id="header"
+          label="Header"
+          selected={selected}
+          onSelect={onSelect}
+          interactive={interactive}
+          accent={accent}
+          locked={isLocked("header")}
+        >
           <div
             className="flex items-center"
             style={{
@@ -195,8 +206,12 @@ export function EmailPreview({
                     : "flex-start",
             }}
           >
-            {c.header.logoUrl ? (
-              <img src={c.header.logoUrl} alt={c.header.logoText} className="h-10 w-auto object-contain" />
+            {(dark ? c.header.logoUrlDark || c.header.logoUrl : c.header.logoUrl) ? (
+              <img
+                src={(dark ? c.header.logoUrlDark || c.header.logoUrl : c.header.logoUrl) as string}
+                alt={c.header.logoText}
+                className="h-10 w-auto object-contain"
+              />
             ) : (
               <span
                 className="border-2 px-3 py-1.5 text-center font-mono text-[11px] font-semibold uppercase leading-tight tracking-[0.18em]"
@@ -213,7 +228,15 @@ export function EmailPreview({
       )}
 
       {c.hero.visible && (
-        <Block id="hero" label="Hero image" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent} locked={isLocked("hero")}>
+        <Block
+          id="hero"
+          label="Hero image"
+          selected={selected}
+          onSelect={onSelect}
+          interactive={interactive}
+          accent={accent}
+          locked={isLocked("hero")}
+        >
           <div
             className="relative overflow-hidden bg-zinc-100"
             style={{ height: c.hero.height, borderRadius: c.hero.radius }}
@@ -236,7 +259,15 @@ export function EmailPreview({
       )}
 
       {c.body.visible && (
-        <Block id="body" label="Content" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent} locked={isLocked("body")}>
+        <Block
+          id="body"
+          label="Content"
+          selected={selected}
+          onSelect={onSelect}
+          interactive={interactive}
+          accent={accent}
+          locked={isLocked("body")}
+        >
           <div className="px-8 pb-2 pt-8" style={{ textAlign: c.body.align }}>
             <Editable
               as="h1"
@@ -276,7 +307,15 @@ export function EmailPreview({
       )}
 
       {c.cta.visible && (
-        <Block id="cta" label="Button" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent} locked={isLocked("cta")}>
+        <Block
+          id="cta"
+          label="Button"
+          selected={selected}
+          onSelect={onSelect}
+          interactive={interactive}
+          accent={accent}
+          locked={isLocked("cta")}
+        >
           <div className="px-8 pb-8 pt-6" style={{ textAlign: c.cta.align }}>
             <span
               className="inline-flex items-center justify-center font-semibold"
@@ -301,7 +340,15 @@ export function EmailPreview({
       )}
 
       {c.details.visible && (
-        <Block id="details" label="Detail grid" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent} locked={isLocked("details")}>
+        <Block
+          id="details"
+          label="Detail grid"
+          selected={selected}
+          onSelect={onSelect}
+          interactive={interactive}
+          accent={accent}
+          locked={isLocked("details")}
+        >
           <div
             className="grid border-t border-black/5 px-8 py-7 text-left"
             style={{
@@ -325,7 +372,15 @@ export function EmailPreview({
       )}
 
       {c.footer.visible && (
-        <Block id="footer" label="Footer" selected={selected} onSelect={onSelect} interactive={interactive} accent={accent} locked={isLocked("footer")}>
+        <Block
+          id="footer"
+          label="Footer"
+          selected={selected}
+          onSelect={onSelect}
+          interactive={interactive}
+          accent={accent}
+          locked={isLocked("footer")}
+        >
           <div
             className="border-t border-black/5 px-8 py-7 text-center"
             style={{ background: dark ? "#1b1c1f" : c.footer.bg }}

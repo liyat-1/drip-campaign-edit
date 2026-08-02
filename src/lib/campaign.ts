@@ -27,6 +27,8 @@ export type Campaign = {
   header: {
     visible: boolean;
     logoUrl: string | null;
+    /** Optional alternate logo used when the email renders in dark mode. */
+    logoUrlDark: string | null;
     logoText: string;
     bg: string;
     padding: number;
@@ -140,6 +142,7 @@ const baseCampaign: Campaign = {
   header: {
     visible: true,
     logoUrl: null,
+    logoUrlDark: null,
     logoText: "AC HOTELS",
     bg: "#4b5563",
     padding: 24,
@@ -221,7 +224,7 @@ const baseCampaign: Campaign = {
   },
 };
 
-const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
+const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
 
 export function createCanvasCampaign(): Campaign {
   return clone(baseCampaign);
