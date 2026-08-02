@@ -265,11 +265,6 @@ export function BuilderShell({
     setPanelOpen(false);
   };
 
-  const saveDraft = () => {
-    setSavedAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
-    notify("Draft saved");
-  };
-
   const commitSave = () => {
     const stamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     if (saveMode === "update" && editing) {
@@ -292,6 +287,67 @@ export function BuilderShell({
   const chromeBtn =
     "grid size-8 place-items-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-30";
   const activeLayout = LAYOUTS.find((l) => l.id === layout)!;
+
+  /* Step 0 for a brand-new template: pick the layout first. */
+  if (needsLayout) {
+    return (
+      <div className="grid min-h-dvh place-items-center bg-zinc-900/70 p-4 font-sans text-zinc-900">
+        <div className="w-full max-w-3xl border border-zinc-300 bg-white shadow-2xl">
+          <div className="flex items-start justify-between gap-3 border-b border-zinc-200 px-6 py-4">
+            <div>
+              <p className="font-mono text-[11px] font-semibold uppercase tracking-widest text-blue-600">
+                Step 1 of 2
+              </p>
+              <h1 className="mt-1 text-[18px] font-semibold tracking-tight">
+                Choose a layout to start from
+              </h1>
+              <p className="mt-1 text-[12.5px] text-zinc-500">
+                This sets the skeleton of your template. You can change everything afterwards.
+              </p>
+            </div>
+            <Link to="/" aria-label="Cancel" className={chromeBtn}>
+              <X size={17} />
+            </Link>
+          </div>
+          <div className="grid gap-3 p-6 sm:grid-cols-3">
+            {LAYOUTS.map((l) => (
+              <button
+                key={l.id}
+                onClick={() => setLayout(l.id)}
+                aria-pressed={layout === l.id}
+                className={`border p-3 text-left transition-colors ${
+                  layout === l.id
+                    ? "border-blue-600 bg-blue-50/60 ring-1 ring-blue-600/20"
+                    : "border-zinc-200 hover:border-zinc-400"
+                }`}
+              >
+                <LayoutThumb id={l.id} big />
+                <span className="mt-3 flex items-center justify-between gap-2">
+                  <span className="text-[13.5px] font-semibold text-zinc-900">{l.name}</span>
+                  {layout === l.id && <Check size={15} className="text-blue-600" />}
+                </span>
+                <span className="mt-1 block text-[12px] leading-snug text-zinc-500">{l.desc}</span>
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center justify-between gap-3 border-t border-zinc-200 bg-zinc-50 px-6 py-3.5">
+            <p className="text-[12px] text-zinc-500">
+              Next: design your template, then choose how to save it.
+            </p>
+            <button
+              onClick={() => {
+                update((d) => applyLayout(d, layout));
+                setNeedsLayout(false);
+              }}
+              className="h-10 bg-blue-600 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700"
+            >
+              Start designing
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (minimized) {
     return (
@@ -743,6 +799,128 @@ export function BuilderShell({
                   {layout === l.id && <Check size={17} className="shrink-0" />}
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Save options */}
+      {saveOpen && (
+        <div className="fixed inset-0 z-[95] grid place-items-center bg-zinc-900/50 p-4">
+          <div
+            role="dialog"
+            aria-label="Save template"
+            className="w-full max-w-md border border-zinc-200 bg-white p-6 shadow-2xl"
+          >
+            <p className="text-[15px] font-semibold tracking-tight">How would you like to save?</p>
+            <div className="mt-4 space-y-2.5">
+              <label
+                className={`block cursor-pointer border p-3.5 transition-colors ${
+                  saveMode === "new" ? "border-blue-600 bg-blue-50/60" : "border-zinc-200"
+                }`}
+              >
+                <span className="flex items-start gap-2.5">
+                  <input
+                    type="radio"
+                    checked={saveMode === "new"}
+                    onChange={() => setSaveMode("new")}
+                    className="mt-1 accent-blue-600"
+                  />
+                  <span>
+                    <span className="block text-[13.5px] font-semibold text-zinc-900">
+                      Save as new template{" "}
+                      <span className="font-medium text-blue-700">(Recommended)</span>
+                    </span>
+                    <span className="mt-0.5 block text-[12px] leading-relaxed text-zinc-500">
+                      Creates a new template while keeping the original unchanged.
+                    </span>
+                  </span>
+                </span>
+                {saveMode === "new" && (
+                  <input
+                    value={saveName}
+                    onChange={(e) => setSaveName(e.target.value)}
+                    aria-label="New template name"
+                    placeholder="Template name"
+                    className="mt-3 h-9 w-full border border-zinc-300 px-2.5 text-[13px] outline-none focus:border-blue-600"
+                  />
+                )}
+              </label>
+
+              {editing && (
+                <label
+                  className={`block cursor-pointer border p-3.5 transition-colors ${
+                    saveMode === "update" ? "border-blue-600 bg-blue-50/60" : "border-zinc-200"
+                  }`}
+                >
+                  <span className="flex items-start gap-2.5">
+                    <input
+                      type="radio"
+                      checked={saveMode === "update"}
+                      onChange={() => setSaveMode("update")}
+                      className="mt-1 accent-blue-600"
+                    />
+                    <span>
+                      <span className="block text-[13.5px] font-semibold text-zinc-900">
+                        Update {editing.shared ? "shared" : ""} template “{editing.name}”
+                      </span>
+                      <span className="mt-0.5 block text-[12px] leading-relaxed text-zinc-500">
+                        Updates it for future campaigns. Existing campaigns remain unchanged.
+                      </span>
+                    </span>
+                  </span>
+                </label>
+              )}
+            </div>
+            <div className="mt-5 flex justify-end gap-2.5">
+              <button
+                onClick={() => setSaveOpen(false)}
+                className="h-10 border border-zinc-300 px-5 text-[13px] font-medium text-zinc-800 transition-colors hover:bg-zinc-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={commitSave}
+                className="h-10 bg-blue-600 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700"
+              >
+                Save template
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Saved — hand back to the campaign */}
+      {savedTemplate && (
+        <div className="fixed inset-0 z-[96] grid place-items-center bg-zinc-900/50 p-4">
+          <div
+            role="dialog"
+            aria-label="Template saved"
+            className="w-full max-w-sm border border-zinc-200 bg-white p-6 text-center shadow-2xl"
+          >
+            <span className="mx-auto grid size-11 place-items-center bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200">
+              <Check size={20} />
+            </span>
+            <p className="mt-3 text-[15px] font-semibold tracking-tight">
+              “{savedTemplate}” saved
+            </p>
+            <p className="mt-1 text-[12.5px] leading-relaxed text-zinc-500">
+              It is already selected in your campaign&rsquo;s template library. Close this tab and
+              hit <strong className="font-semibold text-zinc-700">Use template</strong>.
+            </p>
+            <div className="mt-5 grid gap-2">
+              <button
+                onClick={() => window.close()}
+                className="h-10 bg-blue-600 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700"
+              >
+                Back to my campaign
+              </button>
+              <button
+                onClick={() => setSavedTemplate(null)}
+                className="h-10 border border-zinc-300 text-[13px] font-medium text-zinc-800 transition-colors hover:bg-zinc-50"
+              >
+                Keep editing
+              </button>
             </div>
           </div>
         </div>
