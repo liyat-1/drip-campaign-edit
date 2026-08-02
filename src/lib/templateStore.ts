@@ -159,7 +159,11 @@ export function subscribeTemplates(fn: () => void) {
 
 const newId = () => `tpl_${Math.random().toString(36).slice(2, 9)}`;
 
-export function createTemplate(campaign: Campaign, name: string, desc = "Custom template"): StoredTemplate {
+export function createTemplate(
+  campaign: Campaign,
+  name: string,
+  desc = "Custom template",
+): StoredTemplate {
   const now = Date.now();
   const t: StoredTemplate = {
     id: newId(),
@@ -222,9 +226,7 @@ export function deleteTemplate(id: string) {
 }
 
 export function markTemplateUsed(id: string) {
-  write(
-    read().map((t) => (t.id === id ? { ...t, lastUsed: Date.now(), uses: t.uses + 1 } : t)),
-  );
+  write(read().map((t) => (t.id === id ? { ...t, lastUsed: Date.now(), uses: t.uses + 1 } : t)));
 }
 
 /* ------------------ Studio hand-off (picker ⇄ template studio) ------------------ */

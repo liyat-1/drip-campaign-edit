@@ -116,8 +116,7 @@ export function TemplatePicker({
     if (filter === "mine") out = out.filter((t) => !t.shared);
     if (filter === "shared") out = out.filter((t) => t.shared);
     if (filter === "active") out = out.filter((t) => t.active > 0);
-    if (filter === "recent")
-      out = out.filter((t) => Date.now() - t.updatedAt < 14 * 86_400_000);
+    if (filter === "recent") out = out.filter((t) => Date.now() - t.updatedAt < 14 * 86_400_000);
     const sorted = [...out];
     if (sort === "alpha") sorted.sort((a, b) => a.name.localeCompare(b.name));
     else if (sort === "most") sorted.sort((a, b) => b.uses - a.uses);
@@ -206,12 +205,10 @@ export function TemplatePicker({
                   ))}
                 </select>
                 <div className="flex border border-zinc-200">
-                  {(
-                    [
-                      { id: "light" as const, Icon: Sun, label: "Light" },
-                      { id: "dark" as const, Icon: Moon, label: "Dark" },
-                    ]
-                  ).map(({ id, Icon, label }) => (
+                  {[
+                    { id: "light" as const, Icon: Sun, label: "Light" },
+                    { id: "dark" as const, Icon: Moon, label: "Dark" },
+                  ].map(({ id, Icon, label }) => (
                     <button
                       key={id}
                       onClick={() => setScheme(id)}
@@ -552,7 +549,9 @@ function TemplateCard({
       onClick={onSelect}
       aria-pressed={selected}
       className={`overflow-hidden border text-left transition-colors ${
-        selected ? "border-blue-600 ring-1 ring-blue-600/25" : "border-zinc-200 hover:border-zinc-400"
+        selected
+          ? "border-blue-600 ring-1 ring-blue-600/25"
+          : "border-zinc-200 hover:border-zinc-400"
       }`}
     >
       <div

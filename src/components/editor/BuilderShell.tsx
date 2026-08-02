@@ -124,7 +124,9 @@ function LayoutThumb({ id, big = false }: { id: LayoutId; big?: boolean }) {
           <div className={`rounded bg-zinc-300/80 ${big ? "h-12" : "h-4"}`} />
           <div className={`${bar} mx-auto h-1 w-3/4`} />
           {big && <div className={`${bar} mx-auto h-1 w-1/2`} />}
-          <div className={`mx-auto rounded-full bg-zinc-400 ${big ? "mt-1 h-4 w-20" : "h-2 w-10"}`} />
+          <div
+            className={`mx-auto rounded-full bg-zinc-400 ${big ? "mt-1 h-4 w-20" : "h-2 w-10"}`}
+          />
         </>
       )}
       {id === "editorial" && (
@@ -230,9 +232,7 @@ export function BuilderShell({
   const [needsLayout, setNeedsLayout] = useState(req?.mode === "create");
   const [saveOpen, setSaveOpen] = useState(false);
   const [saveMode, setSaveMode] = useState<"new" | "update">(editing ? "new" : "new");
-  const [saveName, setSaveName] = useState(
-    editing ? `${editing.name} copy` : "Untitled template",
-  );
+  const [saveName, setSaveName] = useState(editing ? `${editing.name} copy` : "Untitled template");
   const [savedTemplate, setSavedTemplate] = useState<string | null>(null);
   const [selected, setSelected] = useState<BlockId | null>(null);
   const [mode, setMode] = useState<Mode>("desktop");
@@ -430,10 +430,22 @@ export function BuilderShell({
 
             <span className="mx-1 h-5 w-px bg-zinc-200" />
 
-            <button className={chromeBtn} onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo">
+            <button
+              className={chromeBtn}
+              onClick={undo}
+              disabled={!canUndo}
+              aria-label="Undo"
+              title="Undo"
+            >
               <Undo2 size={16} />
             </button>
-            <button className={chromeBtn} onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo">
+            <button
+              className={chromeBtn}
+              onClick={redo}
+              disabled={!canRedo}
+              aria-label="Redo"
+              title="Redo"
+            >
               <Redo2 size={16} />
             </button>
             <button
@@ -485,7 +497,9 @@ export function BuilderShell({
           {/* Left rail */}
           <aside
             className={`${
-              panelOpen ? "absolute inset-y-0 left-0 z-40 flex w-[86vw] max-w-[22rem] shadow-2xl" : "hidden"
+              panelOpen
+                ? "absolute inset-y-0 left-0 z-40 flex w-[86vw] max-w-[22rem] shadow-2xl"
+                : "hidden"
             } shrink-0 flex-col border-r border-zinc-200 bg-white lg:relative lg:w-[19rem] lg:shadow-none ${
               railCollapsed ? "lg:hidden" : "lg:flex"
             }`}
@@ -525,12 +539,8 @@ export function BuilderShell({
                     <div className="flex justify-center rounded-xl border border-zinc-200 p-3">
                       <TemplatePreview campaign={campaign} />
                     </div>
-                    <p className="text-[13px] font-semibold text-zinc-900">
-                      {activeLayout.name}
-                    </p>
-                    <p className="text-[11.5px] leading-snug text-zinc-500">
-                      {activeLayout.desc}
-                    </p>
+                    <p className="text-[13px] font-semibold text-zinc-900">{activeLayout.name}</p>
+                    <p className="text-[11.5px] leading-snug text-zinc-500">{activeLayout.desc}</p>
                     <button
                       onClick={() => setLayoutPicker(true)}
                       className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-zinc-200 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900"
@@ -539,7 +549,10 @@ export function BuilderShell({
                     </button>
                   </div>
 
-                  <Field label="Email subject" hint={`${stripHtml(campaign.meta.subject).length}/90`}>
+                  <Field
+                    label="Email subject"
+                    hint={`${stripHtml(campaign.meta.subject).length}/90`}
+                  >
                     <TextInput
                       value={campaign.meta.subject}
                       onChange={(v) => update((d) => void (d.meta.subject = v))}
@@ -565,44 +578,42 @@ export function BuilderShell({
                 open={!!openRail[2]}
                 onToggle={() => toggleRail(2)}
               >
-                  <div className="p-3">
-                    <p className="px-1.5 pb-2 text-[12px] font-medium text-zinc-500">
-                      Click a section to edit it in the side panel.
-                    </p>
-                    <ul>
-                      {ORDER.map((id) => {
-                        const visible = (campaign as any)[id].visible as boolean;
-                        const active = selected === id;
-                        return (
-                          <li key={id} className="mb-1 flex items-center gap-1">
-                            <button
-                              onClick={() => open(id)}
-                              aria-current={active}
-                              className={`flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left text-[13px] transition-colors ${
-                                active
-                                  ? "bg-zinc-900 text-white"
-                                  : "text-zinc-700 hover:bg-zinc-50"
-                              }`}
-                            >
-                              <Pencil size={13} className={active ? "opacity-80" : "text-zinc-400"} />
-                              <span className="flex-1 truncate">{BLOCK_LABELS[id]}</span>
-                            </button>
-                            <button
-                              onClick={() => update((d) => void (((d as any)[id].visible = !visible)))}
-                              aria-label={`${visible ? "Hide" : "Show"} ${BLOCK_LABELS[id]}`}
-                              title={visible ? "Hide section" : "Show section"}
-                              className="grid size-9 shrink-0 place-items-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
-                            >
-                              {visible ? <Eye size={15} /> : <EyeOff size={15} />}
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                  <div className="border-t border-zinc-100">
-                    <SenderForm campaign={campaign} update={update} />
-                  </div>
+                <div className="p-3">
+                  <p className="px-1.5 pb-2 text-[12px] font-medium text-zinc-500">
+                    Click a section to edit it in the side panel.
+                  </p>
+                  <ul>
+                    {ORDER.map((id) => {
+                      const visible = (campaign as any)[id].visible as boolean;
+                      const active = selected === id;
+                      return (
+                        <li key={id} className="mb-1 flex items-center gap-1">
+                          <button
+                            onClick={() => open(id)}
+                            aria-current={active}
+                            className={`flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left text-[13px] transition-colors ${
+                              active ? "bg-zinc-900 text-white" : "text-zinc-700 hover:bg-zinc-50"
+                            }`}
+                          >
+                            <Pencil size={13} className={active ? "opacity-80" : "text-zinc-400"} />
+                            <span className="flex-1 truncate">{BLOCK_LABELS[id]}</span>
+                          </button>
+                          <button
+                            onClick={() => update((d) => void ((d as any)[id].visible = !visible))}
+                            aria-label={`${visible ? "Hide" : "Show"} ${BLOCK_LABELS[id]}`}
+                            title={visible ? "Hide section" : "Show section"}
+                            className="grid size-9 shrink-0 place-items-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+                          >
+                            {visible ? <Eye size={15} /> : <EyeOff size={15} />}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+                <div className="border-t border-zinc-100">
+                  <SenderForm campaign={campaign} update={update} />
+                </div>
               </RailSection>
 
               <RailSection
@@ -719,22 +730,22 @@ export function BuilderShell({
 
           {/* Side-docked section editor (structured builder) */}
           {!floatingEditor && (
-          <EditorPanel
-            open={!!selected}
-            title={selected ? EDIT_TITLES[selected] : ""}
-            subtitle="Changes appear in the live preview instantly"
-            onClose={() => setSelected(null)}
-            footer={
-              <button
-                onClick={() => setSelected(null)}
-                className="h-10 w-full rounded-lg bg-zinc-900 text-[13px] font-medium text-white transition-colors hover:bg-zinc-800"
-              >
-                Done
-              </button>
-            }
-          >
-            {selected && <BlockForm id={selected} campaign={campaign} update={update} />}
-          </EditorPanel>
+            <EditorPanel
+              open={!!selected}
+              title={selected ? EDIT_TITLES[selected] : ""}
+              subtitle="Changes appear in the live preview instantly"
+              onClose={() => setSelected(null)}
+              footer={
+                <button
+                  onClick={() => setSelected(null)}
+                  className="h-10 w-full rounded-lg bg-zinc-900 text-[13px] font-medium text-white transition-colors hover:bg-zinc-800"
+                >
+                  Done
+                </button>
+              }
+            >
+              {selected && <BlockForm id={selected} campaign={campaign} update={update} />}
+            </EditorPanel>
           )}
         </div>
       </div>
@@ -791,7 +802,9 @@ export function BuilderShell({
                 >
                   <LayoutThumb id={l.id} />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[13.5px] font-semibold text-zinc-900">{l.name}</span>
+                    <span className="block text-[13.5px] font-semibold text-zinc-900">
+                      {l.name}
+                    </span>
                     <span className="mt-0.5 block text-[12px] leading-snug text-zinc-500">
                       {l.desc}
                     </span>
@@ -901,9 +914,7 @@ export function BuilderShell({
             <span className="mx-auto grid size-11 place-items-center bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200">
               <Check size={20} />
             </span>
-            <p className="mt-3 text-[15px] font-semibold tracking-tight">
-              “{savedTemplate}” saved
-            </p>
+            <p className="mt-3 text-[15px] font-semibold tracking-tight">“{savedTemplate}” saved</p>
             <p className="mt-1 text-[12.5px] leading-relaxed text-zinc-500">
               It is already selected in your campaign&rsquo;s template library. Close this tab and
               hit <strong className="font-semibold text-zinc-700">Use template</strong>.

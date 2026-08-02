@@ -224,7 +224,7 @@ const baseCampaign: Campaign = {
   },
 };
 
-const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
+const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
 
 export function createCanvasCampaign(): Campaign {
   return clone(baseCampaign);
