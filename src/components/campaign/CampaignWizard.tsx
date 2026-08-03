@@ -259,7 +259,11 @@ export function CampaignWizard() {
   /* Selecting a content block in the email preview opens a floating editor
    * anchored to it — same mechanic as the template studio. */
   const emailEditing =
-    step === "content" && activeTab === "email" && templateReady && emailMode !== "inbox";
+    step === "content" &&
+    activeTab === "email" &&
+    templateReady &&
+    emailMode !== "inbox" &&
+    !activeFollowUp;
   const floatingBlock =
     emailEditing && openBlock && EDITABLE_BLOCKS.includes(openBlock) ? openBlock : null;
   const anchor = useAnchorRect(floatingBlock, !!floatingBlock, [
@@ -825,6 +829,7 @@ function ContentRail(props: {
     toggle,
   } = props;
 
+  const fu = props.followUps.find((f) => f.id === props.selectedStep) ?? null;
   const showTabs = channel === "both" || channel === "text_fallback";
   const textRef = useRef<HTMLDivElement | null>(null);
   const insertToken = (token: string) => {
@@ -859,7 +864,7 @@ function ContentRail(props: {
         </div>
       )}
 
-      {activeTab === "text" && hasText(channel) && (
+      {!fu && activeTab === "text" && hasText(channel) && (
         <>
           <RailSection
             index={1}
@@ -953,7 +958,7 @@ function ContentRail(props: {
         </>
       )}
 
-      {activeTab === "email" && hasEmail(channel) && templateId === null && (
+      {!fu && activeTab === "email" && hasEmail(channel) && templateId === null && (
         <div className="p-4">
           <div className="rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-6 text-center">
             <span className="mx-auto grid size-11 place-items-center rounded-full bg-white text-zinc-500 ring-1 ring-zinc-200">
@@ -976,7 +981,7 @@ function ContentRail(props: {
         </div>
       )}
 
-      {activeTab === "email" && hasEmail(channel) && templateId !== null && (
+      {!fu && activeTab === "email" && hasEmail(channel) && templateId !== null && (
         <>
           <RailSection
             index={1}
@@ -1117,22 +1122,59 @@ function ContentRail(props: {
 
       {((activeTab === "text" && hasText(channel)) ||
         (activeTab === "email" && hasEmail(channel) && templateId !== null)) && (
-        <RailSection
-          index={activeTab === "text" ? 4 : 5}
-          title="Follow-ups"
-          hint="Automatic reminders after this message"
-          open={!!openRail[6]}
-          onToggle={() => toggle(6)}
-        >
-          <div className="p-4">
-            <ToggleRow
-              label="Enable message sequence"
-              hint="Send automatic follow-ups with configurable delays if a guest doesn't book."
-              checked={props.sequence}
-              onChange={props.setSequence}
-            />
-          </div>
-        </RailSection>
+        <>
+          {fu && (
+            <RailSection
+              index="★"
+              title={`Editing · ${fu.name}`}
+              hint="Follow-up message — preview updates live"
+              open
+              onToggle={() => props.setSelectedStep(INITIAL_STEP_ID)}
+            >
+              <FollowUpEditor
+                step={fu}
+                onChange={(patch) => props.patchFollowUp(fu.id, patch)}
+                text={hasText(channel)}
+                email={hasEmail(channel) && templateId !== null}
+                tags={props.mergeTags}
+              />
+            </RailSection>
+          )}
+
+          <RailSection
+            index={activeTab === "text" ? 4 : 5}
+            title="Follow-up sequence"
+            hint="Automatic reminders after this message"
+            open={!!openRail[6]}
+            onToggle={() => toggle(6)}
+          >
+            <div className="p-4 pb-0">
+              <ToggleRow
+                label="Enable follow-up sequence"
+                hint="Automatically send reminder messages after the initial message."
+                checked={props.sequence}
+                onChange={props.setSequence}
+              />
+            </div>
+            {props.sequence && (
+              <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                <SequenceTimeline
+                  steps={props.followUps}
+                  selectedId={props.selectedStep}
+                  onSelect={props.setSelectedStep}
+                  onAdd={props.addFollowUp}
+                  onDelete={props.removeFollowUp}
+                  onDelay={(id, delay) => props.patchFollowUp(id, { delay })}
+                  initialExcerpt={
+                    activeTab === "text" ? props.message : stripHtml(campaign.meta.subject)
+                  }
+                  text={hasText(channel)}
+                  email={hasEmail(channel) && templateId !== null}
+                />
+              </div>
+            )}
+          </RailSection>
+        </>
       )}
     </>
   );
