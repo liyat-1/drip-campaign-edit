@@ -32,6 +32,11 @@ function ChannelBadges({ text, email }: { text: boolean; email: boolean }) {
   );
 }
 
+/** Timeline excerpts read better without raw merge-token braces. */
+function plain(t: string) {
+  return t.replace(/\{\{([a-z_]+)\}\}/g, (_m, k: string) => k.replace(/_/g, " "));
+}
+
 function Connector() {
   return (
     <div className="flex justify-center">
@@ -82,7 +87,7 @@ function StepCard({
             {selected ? "Editing" : STATUS_LABEL[status]}
           </span>
         </span>
-        <span className="mt-1 block truncate pl-4 text-[11.5px] text-zinc-500">{excerpt}</span>
+        <span className="mt-1 block truncate pl-4 text-[11.5px] text-zinc-500">{plain(excerpt)}</span>
         <span className="mt-2 flex items-center gap-2 pl-4">
           <ChannelBadges text={text} email={email} />
           <span className="truncate text-[10.5px] text-zinc-400">{meta}</span>

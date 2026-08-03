@@ -1125,7 +1125,7 @@ function ContentRail(props: {
         <>
           {fu && (
             <RailSection
-              index="★"
+              index="✎"
               title={`Editing · ${fu.name}`}
               hint="Follow-up message — preview updates live"
               open
