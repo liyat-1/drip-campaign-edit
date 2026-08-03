@@ -43,6 +43,9 @@ import { Field, TextArea, TextInput, ToggleRow } from "../editor/controls";
 import { ScaledEmail } from "./ScaledEmail";
 import { TemplatePicker } from "./TemplatePicker";
 import { TagTextArea, type TagDef } from "./TagTextArea";
+import { SequenceTimeline } from "./SequenceTimeline";
+import { FollowUpEditor } from "./FollowUpEditor";
+import { INITIAL_STEP_ID, makeFollowUp, type FollowUp } from "@/lib/sequence";
 import { useCampaign } from "@/lib/useCampaign";
 import { createCanvasCampaign } from "@/lib/campaign";
 import { getTemplate } from "@/lib/templateStore";
@@ -154,6 +157,8 @@ export function CampaignWizard() {
   const [step, setStep] = useState<Step>("preferences");
   const [channel, setChannel] = useState<Channel | null>(null);
   const [sequence, setSequence] = useState(false);
+  const [followUps, setFollowUps] = useState<FollowUp[]>([]);
+  const [selectedStep, setSelectedStep] = useState<string>(INITIAL_STEP_ID);
   const [audience, setAudience] = useState("everyone");
   const [startDate, setStartDate] = useState("2026-07-29");
   const [cutOff, setCutOff] = useState(false);
@@ -221,10 +226,44 @@ export function CampaignWizard() {
   const activeTab: "text" | "email" =
     channel === "text" ? "text" : channel === "email" ? "email" : contentTab;
 
+  const activeFollowUp =
+    sequence && selectedStep !== INITIAL_STEP_ID
+      ? (followUps.find((f) => f.id === selectedStep) ?? null)
+      : null;
+
+  const addFollowUp = () => {
+    const next = makeFollowUp(followUps.length);
+    setFollowUps((s2) => [...s2, next]);
+    setSelectedStep(next.id);
+  };
+  const patchFollowUp = (id: string, patch: Partial<FollowUp>) =>
+    setFollowUps((s2) => s2.map((f) => (f.id === id ? { ...f, ...patch } : f)));
+  const removeFollowUp = (id: string) => {
+    setFollowUps((s2) => s2.filter((f) => f.id !== id));
+    setSelectedStep((cur) => (cur === id ? INITIAL_STEP_ID : cur));
+  };
+
+  /** Preview always reflects the selected timeline step. */
+  const previewCampaign = activeFollowUp
+    ? {
+        ...campaign,
+        meta: { ...campaign.meta, subject: activeFollowUp.subject },
+        body: {
+          ...campaign.body,
+          heading: activeFollowUp.heading,
+          paragraphs: [{ id: "fu-body", text: activeFollowUp.body }],
+        },
+      }
+    : campaign;
+
   /* Selecting a content block in the email preview opens a floating editor
    * anchored to it — same mechanic as the template studio. */
   const emailEditing =
-    step === "content" && activeTab === "email" && templateReady && emailMode !== "inbox";
+    step === "content" &&
+    activeTab === "email" &&
+    templateReady &&
+    emailMode !== "inbox" &&
+    !activeFollowUp;
   const floatingBlock =
     emailEditing && openBlock && EDITABLE_BLOCKS.includes(openBlock) ? openBlock : null;
   const anchor = useAnchorRect(floatingBlock, !!floatingBlock, [
@@ -457,7 +496,17 @@ export function CampaignWizard() {
                   openRail={openRail}
                   toggle={toggleRail}
                   sequence={sequence}
-                  setSequence={setSequence}
+                  setSequence={(v) => {
+                    setSequence(v);
+                    if (!v) setSelectedStep(INITIAL_STEP_ID);
+                  }}
+                  followUps={followUps}
+                  selectedStep={selectedStep}
+                  setSelectedStep={setSelectedStep}
+                  addFollowUp={addFollowUp}
+                  patchFollowUp={patchFollowUp}
+                  removeFollowUp={removeFollowUp}
+                  mergeTags={MERGE_TAGS}
                   onTest={(kind) => notify(`Test ${kind} sent`)}
                 />
               )}
@@ -535,9 +584,9 @@ export function CampaignWizard() {
               {step === "content" && activeTab === "text" && hasText(channel) && (
                 <div className="flex justify-center">
                   <SmsPreview
-                    message={message}
-                    link={useCustomLink ? link : undefined}
-                    imageUrl={textMedia}
+                    message={activeFollowUp ? activeFollowUp.message : message}
+                    link={!activeFollowUp && useCustomLink ? link : undefined}
+                    imageUrl={activeFollowUp ? null : textMedia}
                     sender={campaign.footer.company || campaign.header.logoText}
                     scale={0.8}
                   />
@@ -556,14 +605,14 @@ export function CampaignWizard() {
                 activeTab === "email" &&
                 templateReady &&
                 (emailMode === "inbox" ? (
-                  <InboxPreview campaign={campaign} />
+                  <InboxPreview campaign={previewCampaign} />
                 ) : emailMode === "mobile" ? (
                   <div className="flex justify-center">
                     <PhoneMockup scale={0.78}>
                       <EmailPreview
-                        campaign={campaign}
-                        interactive
-                        inlineEdit
+                        campaign={previewCampaign}
+                        interactive={!activeFollowUp}
+                        inlineEdit={!activeFollowUp}
                         update={update}
                         selected={openBlock}
                         onSelect={setOpenBlock}
@@ -574,9 +623,9 @@ export function CampaignWizard() {
                   </div>
                 ) : (
                   <EmailPreview
-                    campaign={campaign}
-                    interactive
-                    inlineEdit
+                    campaign={previewCampaign}
+                    interactive={!activeFollowUp}
+                    inlineEdit={!activeFollowUp}
                     update={update}
                     selected={openBlock}
                     onSelect={setOpenBlock}
@@ -757,6 +806,13 @@ function ContentRail(props: {
   toggle: (i: number) => void;
   sequence: boolean;
   setSequence: (v: boolean) => void;
+  followUps: FollowUp[];
+  selectedStep: string;
+  setSelectedStep: (id: string) => void;
+  addFollowUp: () => void;
+  patchFollowUp: (id: string, patch: Partial<FollowUp>) => void;
+  removeFollowUp: (id: string) => void;
+  mergeTags: (TagDef & { chip: string })[];
   onTest: (kind: "email" | "text") => void;
 }) {
   const {
@@ -773,6 +829,7 @@ function ContentRail(props: {
     toggle,
   } = props;
 
+  const fu = props.followUps.find((f) => f.id === props.selectedStep) ?? null;
   const showTabs = channel === "both" || channel === "text_fallback";
   const textRef = useRef<HTMLDivElement | null>(null);
   const insertToken = (token: string) => {
@@ -807,7 +864,7 @@ function ContentRail(props: {
         </div>
       )}
 
-      {activeTab === "text" && hasText(channel) && (
+      {!fu && activeTab === "text" && hasText(channel) && (
         <>
           <RailSection
             index={1}
@@ -901,7 +958,7 @@ function ContentRail(props: {
         </>
       )}
 
-      {activeTab === "email" && hasEmail(channel) && templateId === null && (
+      {!fu && activeTab === "email" && hasEmail(channel) && templateId === null && (
         <div className="p-4">
           <div className="rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-6 text-center">
             <span className="mx-auto grid size-11 place-items-center rounded-full bg-white text-zinc-500 ring-1 ring-zinc-200">
@@ -924,7 +981,7 @@ function ContentRail(props: {
         </div>
       )}
 
-      {activeTab === "email" && hasEmail(channel) && templateId !== null && (
+      {!fu && activeTab === "email" && hasEmail(channel) && templateId !== null && (
         <>
           <RailSection
             index={1}
@@ -1065,22 +1122,59 @@ function ContentRail(props: {
 
       {((activeTab === "text" && hasText(channel)) ||
         (activeTab === "email" && hasEmail(channel) && templateId !== null)) && (
-        <RailSection
-          index={activeTab === "text" ? 4 : 5}
-          title="Follow-ups"
-          hint="Automatic reminders after this message"
-          open={!!openRail[6]}
-          onToggle={() => toggle(6)}
-        >
-          <div className="p-4">
-            <ToggleRow
-              label="Enable message sequence"
-              hint="Send automatic follow-ups with configurable delays if a guest doesn't book."
-              checked={props.sequence}
-              onChange={props.setSequence}
-            />
-          </div>
-        </RailSection>
+        <>
+          {fu && (
+            <RailSection
+              index="✎"
+              title={`Editing · ${fu.name}`}
+              hint="Follow-up message — preview updates live"
+              open
+              onToggle={() => props.setSelectedStep(INITIAL_STEP_ID)}
+            >
+              <FollowUpEditor
+                step={fu}
+                onChange={(patch) => props.patchFollowUp(fu.id, patch)}
+                text={hasText(channel)}
+                email={hasEmail(channel) && templateId !== null}
+                tags={props.mergeTags}
+              />
+            </RailSection>
+          )}
+
+          <RailSection
+            index={activeTab === "text" ? 4 : 5}
+            title="Follow-up sequence"
+            hint="Automatic reminders after this message"
+            open={!!openRail[6]}
+            onToggle={() => toggle(6)}
+          >
+            <div className="p-4 pb-0">
+              <ToggleRow
+                label="Enable follow-up sequence"
+                hint="Automatically send reminder messages after the initial message."
+                checked={props.sequence}
+                onChange={props.setSequence}
+              />
+            </div>
+            {props.sequence && (
+              <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                <SequenceTimeline
+                  steps={props.followUps}
+                  selectedId={props.selectedStep}
+                  onSelect={props.setSelectedStep}
+                  onAdd={props.addFollowUp}
+                  onDelete={props.removeFollowUp}
+                  onDelay={(id, delay) => props.patchFollowUp(id, { delay })}
+                  initialExcerpt={
+                    activeTab === "text" ? props.message : stripHtml(campaign.meta.subject)
+                  }
+                  text={hasText(channel)}
+                  email={hasEmail(channel) && templateId !== null}
+                />
+              </div>
+            )}
+          </RailSection>
+        </>
       )}
     </>
   );
