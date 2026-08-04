@@ -418,7 +418,8 @@ export function BuilderShell({
               onClick={() => setSaveOpen(true)}
               className="flex items-center gap-1.5 border border-zinc-200 px-3 py-1.5 text-[12.5px] font-medium text-zinc-700 transition-colors hover:border-zinc-300 hover:bg-zinc-50"
             >
-              <Save size={14} /> <span className="hidden sm:inline">Save template</span>
+              <Save size={14} />{" "}
+              <span className="hidden sm:inline">{req ? "Save & use in campaign" : "Save template"}</span>
             </button>
             <button
               onClick={() => setPanelOpen((v) => !v)}
@@ -896,7 +897,7 @@ export function BuilderShell({
                 onClick={commitSave}
                 className="h-10 bg-blue-600 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700"
               >
-                Save template
+                {req ? "Save & use in campaign" : "Save template"}
               </button>
             </div>
           </div>
@@ -916,15 +917,14 @@ export function BuilderShell({
             </span>
             <p className="mt-3 text-[15px] font-semibold tracking-tight">“{savedTemplate}” saved</p>
             <p className="mt-1 text-[12.5px] leading-relaxed text-zinc-500">
-              It is already selected in your campaign&rsquo;s template library. Close this tab and
-              hit <strong className="font-semibold text-zinc-700">Use template</strong>.
+              It is ready in your template library and pre-selected for your campaign.
             </p>
             <div className="mt-5 grid gap-2">
               <button
                 onClick={() => window.close()}
                 className="h-10 bg-blue-600 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700"
               >
-                Back to my campaign
+                Use in campaign
               </button>
               <button
                 onClick={() => setSavedTemplate(null)}
