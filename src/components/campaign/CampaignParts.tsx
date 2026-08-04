@@ -53,8 +53,6 @@ const RECENT_FILES = [
 
 /* ===================== Promotion rail ===================== */
 
-export /* ===================== Promotion rail ===================== */
-
 export function PromotionRail(props: {
   promoOn: boolean;
   setPromoOn: (v: boolean) => void;
