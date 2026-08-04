@@ -43,6 +43,7 @@ export function StepOverlay({
   onChooseTemplate,
   mergeTags,
   media,
+  mediaSlot,
 }: {
   title: string;
   text: boolean;
@@ -58,6 +59,7 @@ export function StepOverlay({
   onChooseTemplate: () => void;
   mergeTags: (TagDef & { chip: string })[];
   media?: string | null;
+  mediaSlot?: React.ReactNode;
 }) {
   const [tab, setTab] = useState<"text" | "email">(text ? "text" : "email");
   const [mode, setMode] = useState<PreviewMode>("desktop");
@@ -178,6 +180,14 @@ export function StepOverlay({
                     ))}
                   </div>
                 </div>
+                {mediaSlot && (
+                  <div className="border-t border-zinc-100 pt-4">
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                      Image
+                    </p>
+                    {mediaSlot}
+                  </div>
+                )}
               </section>
             )}
 
