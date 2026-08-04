@@ -15,7 +15,6 @@ import {
   BadgePercent,
   SlidersHorizontal,
 } from "lucide-react";
-import { RailSection } from "../editor/RailSection";
 import { WorkflowCanvas } from "./WorkflowCanvas";
 import { StepOverlay, type StepDraft } from "./StepOverlay";
 import { RuleDialog } from "./RuleDialog";
@@ -620,6 +619,3 @@ export function CampaignWizard() {
     </div>
   );
 }
-
-/* Kept for future use by the sequence step. */
-export { RailSection };
