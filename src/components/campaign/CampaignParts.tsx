@@ -55,7 +55,7 @@ const RECENT_FILES = [
 
 export /* ===================== Promotion rail ===================== */
 
-function PromotionRail(props: {
+export function PromotionRail(props: {
   promoOn: boolean;
   setPromoOn: (v: boolean) => void;
   promoCode: string;
