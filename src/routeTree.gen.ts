@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as StructuredRouteImport } from './routes/structured'
 import { Route as CanvasRouteImport } from './routes/canvas'
 import { Route as CampaignRouteImport } from './routes/campaign'
+import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
 
 const StructuredRoute = StructuredRouteImport.update({
@@ -29,6 +30,11 @@ const CampaignRoute = CampaignRouteImport.update({
   path: '/campaign',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AnalyticsRoute = AnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -37,12 +43,14 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
   '/campaign': typeof CampaignRoute
   '/canvas': typeof CanvasRoute
   '/structured': typeof StructuredRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
   '/campaign': typeof CampaignRoute
   '/canvas': typeof CanvasRoute
   '/structured': typeof StructuredRoute
@@ -50,20 +58,22 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
   '/campaign': typeof CampaignRoute
   '/canvas': typeof CanvasRoute
   '/structured': typeof StructuredRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/campaign' | '/canvas' | '/structured'
+  fullPaths: '/' | '/analytics' | '/campaign' | '/canvas' | '/structured'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/campaign' | '/canvas' | '/structured'
-  id: '__root__' | '/' | '/campaign' | '/canvas' | '/structured'
+  to: '/' | '/analytics' | '/campaign' | '/canvas' | '/structured'
+  id: '__root__' | '/' | '/analytics' | '/campaign' | '/canvas' | '/structured'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AnalyticsRoute: typeof AnalyticsRoute
   CampaignRoute: typeof CampaignRoute
   CanvasRoute: typeof CanvasRoute
   StructuredRoute: typeof StructuredRoute
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CampaignRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/analytics': {
+      id: '/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -104,6 +121,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AnalyticsRoute: AnalyticsRoute,
   CampaignRoute: CampaignRoute,
   CanvasRoute: CanvasRoute,
   StructuredRoute: StructuredRoute,
@@ -111,13 +129,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
