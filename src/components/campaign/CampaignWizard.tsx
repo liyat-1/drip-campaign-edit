@@ -418,9 +418,13 @@ export function CampaignWizard() {
                     disabled={locked}
                     onClick={() => setStep(s.id)}
                     aria-current={current ? "step" : undefined}
-                    className="group flex min-w-0 flex-1 items-center gap-2.5 border-b-2 px-3 py-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40 data-[current=true]:border-blue-600"
-                    data-current={current}
-                    style={{ borderBottomColor: current ? undefined : "transparent" }}
+                    className={`group flex min-w-0 flex-1 items-center gap-2.5 border-b-2 px-3 py-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                      current
+                        ? "border-blue-600"
+                        : done
+                          ? "border-blue-200"
+                          : "border-transparent"
+                    }`}
                   >
                     <span
                       className={`grid size-[20px] shrink-0 place-items-center text-[10.5px] font-semibold transition-colors ${
