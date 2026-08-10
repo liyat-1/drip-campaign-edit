@@ -12,10 +12,13 @@ import {
   Trash2,
   BadgePercent,
   FileText,
+  Repeat2,
+  X,
 } from "lucide-react";
 import { RailSection } from "../editor/RailSection";
 import { Select } from "../editor/Select";
 import { Field, TextInput, ToggleRow } from "../editor/controls";
+import { StepMenu } from "./StepMenu";
 import heroAmalfi from "@/assets/hero-amalfi.jpg";
 import heroValley from "@/assets/hero-valley.jpg";
 
