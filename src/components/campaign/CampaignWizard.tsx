@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   X,
@@ -11,11 +11,12 @@ import {
   Repeat,
   Split,
   Pencil,
-  Workflow,
-  BadgePercent,
-  SlidersHorizontal,
+  GitBranch,
+  Trash2,
 } from "lucide-react";
-import { WorkflowCanvas } from "./WorkflowCanvas";
+import { StructureBuilder } from "./StructureBuilder";
+import { SequenceBoard } from "./SequenceBoard";
+import { ReadinessPanel } from "./ReadinessPanel";
 import { StepOverlay, type StepDraft } from "./StepOverlay";
 import { RuleDialog } from "./RuleDialog";
 import { TemplatePicker } from "./TemplatePicker";
@@ -32,9 +33,14 @@ import {
 } from "./CampaignParts";
 import {
   INITIAL_STEP_ID,
-  defaultFollowUps,
+  defaultSteps,
+  duplicateStep,
   makeFollowUp,
-  type FollowUp,
+  missingChannels,
+  renumber,
+  ruleSentence,
+  type ChannelKey,
+  type SequenceStep,
   type Rule,
 } from "@/lib/sequence";
 import { useCampaign } from "@/lib/useCampaign";
@@ -43,9 +49,9 @@ import { getTemplate } from "@/lib/templateStore";
 import { stripHtml } from "@/lib/richtext";
 
 const STEPS = [
-  { id: "preferences", label: "Preferences", Icon: SlidersHorizontal },
-  { id: "sequence", label: "Sequence", Icon: Workflow },
-  { id: "promotion", label: "Promotion", Icon: BadgePercent },
+  { id: "preferences", label: "Preferences", hint: "Structure" },
+  { id: "sequence", label: "Sequence", hint: "Content" },
+  { id: "promotion", label: "Finalize & Promote", hint: "Launch" },
 ] as const;
 type Step = (typeof STEPS)[number]["id"];
 
@@ -95,17 +101,14 @@ export function CampaignWizard() {
   const [step, setStep] = useState<Step>("preferences");
   const [channel, setChannel] = useState<Channel | null>(null);
 
-  const [followUps, setFollowUps] = useState<FollowUp[]>(defaultFollowUps);
+  const [steps, setSteps] = useState<SequenceStep[]>(defaultSteps);
   const [rules, setRules] = useState<Rule[]>([]);
   const [ruleOpen, setRuleOpen] = useState(false);
 
-  const [message, setMessage] = useState(
-    "{{first_name}}! It's been a while since you stayed on {{checkout_date}} at {{hotel}}. Find the best hidden rates for your next trip.",
-  );
   const [textMedia, setTextMedia] = useState<string | null>(null);
-
-  const [templateId, setTemplateId] = useState<string | null>(null);
   const [picker, setPicker] = useState(false);
+  /** Which step the template picker is choosing a design for. */
+  const [pickerFor, setPickerFor] = useState<string | null>(null);
 
   const [audience, setAudience] = useState("everyone");
   const [startDate, setStartDate] = useState("2026-08-04");
@@ -138,11 +141,13 @@ export function CampaignWizard() {
     setTimeout(() => setToast(null), 2200);
   };
 
-  /* ---------------- Overlay editing ---------------- */
-  const [editingId, setEditingId] = useState<string | null>(null);
+  /* ---------------- Editing overlay ---------------- */
+  const [editing, setEditing] = useState<{ stepId: string; channel: ChannelKey } | null>(null);
   const [draft, setDraft] = useState<StepDraft | null>(null);
 
-  const templateReady = hasEmail(channel) && templateId !== null;
+  const email = hasEmail(channel);
+  const text = hasText(channel);
+
   const guests =
     audience === "everyone"
       ? 1840
@@ -151,42 +156,68 @@ export function CampaignWizard() {
         : audience === "loyalty"
           ? 268
           : 733;
-  const cost = hasText(channel) ? (guests * 0.06).toFixed(2) : "0.00";
+  const cost = text ? (guests * 0.06).toFixed(2) : "0.00";
 
-  const initialEmailBody = campaign.body.paragraphs.map((p) => stripHtml(p.text)).join("\n\n");
+  const attention = useMemo(
+    () => missingChannels(steps, { email, text }),
+    [steps, email, text],
+  );
 
-  const openStep = (id: string) => {
-    if (id === INITIAL_STEP_ID) {
-      setDraft({
-        message,
-        subject: stripHtml(campaign.meta.subject),
-        preheader: campaign.meta.preheader,
-        heading: stripHtml(campaign.body.heading),
-        body: initialEmailBody,
-        ctaLabel: campaign.cta.label,
-        ctaUrl: campaign.cta.url,
-      });
-    } else {
-      const f = followUps.find((x) => x.id === id);
-      if (!f) return;
-      setDraft({
-        message: f.message,
-        subject: f.subject,
-        preheader: campaign.meta.preheader,
-        heading: f.heading,
-        body: f.body,
-        ctaLabel: campaign.cta.label,
-        ctaUrl: campaign.cta.url,
-        delay: { ...f.delay },
-      });
-    }
-    setEditingId(id);
+  const patchStep = (id: string, fn: (s: SequenceStep) => SequenceStep) =>
+    setSteps((list) => list.map((s) => (s.id === id ? fn(s) : s)));
+
+  const addFollowUp = () =>
+    setSteps((list) => renumber([...list, makeFollowUp(list.length - 1)]));
+  const deleteStep = (id: string) =>
+    setSteps((list) => renumber(list.filter((s) => s.id !== id || s.kind === "initial")));
+  const dupStep = (id: string) =>
+    setSteps((list) => {
+      const i = list.findIndex((s) => s.id === id);
+      if (i < 0) return list;
+      const copy = duplicateStep(list[i], i);
+      return renumber([...list.slice(0, i + 1), copy, ...list.slice(i + 1)]);
+    });
+
+  const openEditor = (stepId: string, ch: ChannelKey) => {
+    const s = steps.find((x) => x.id === stepId);
+    if (!s) return;
+    const cfg = s[ch];
+    const isInitial = s.kind === "initial";
+    setDraft({
+      message:
+        cfg.message ||
+        (isInitial
+          ? "{{first_name}}! It's been a while since you stayed on {{checkout_date}} at {{hotel}}. Find the best hidden rates for your next trip."
+          : ""),
+      subject: cfg.subject || (isInitial ? stripHtml(campaign.meta.subject) : ""),
+      preheader: campaign.meta.preheader,
+      heading: cfg.heading || (isInitial ? stripHtml(campaign.body.heading) : ""),
+      body:
+        cfg.body ||
+        (isInitial ? campaign.body.paragraphs.map((p) => stripHtml(p.text)).join("\n\n") : ""),
+      ctaLabel: campaign.cta.label,
+      ctaUrl: campaign.cta.url,
+      ...(s.kind === "followup" ? { delay: { ...s.delay } } : {}),
+    });
+    setEditing({ stepId, channel: ch });
   };
 
   const saveStep = () => {
-    if (!draft || !editingId) return;
-    if (editingId === INITIAL_STEP_ID) {
-      setMessage(draft.message);
+    if (!draft || !editing) return;
+    const { stepId, channel: ch } = editing;
+    patchStep(stepId, (s) => ({
+      ...s,
+      delay: draft.delay ?? s.delay,
+      [ch]: {
+        ...s[ch],
+        configured: true,
+        subject: draft.subject,
+        heading: draft.heading,
+        body: draft.body,
+        message: draft.message,
+      },
+    }));
+    if (stepId === INITIAL_STEP_ID && ch === "email") {
       update((d) => {
         d.meta.subject = draft.subject;
         d.meta.preheader = draft.preheader;
@@ -198,27 +229,10 @@ export function CampaignWizard() {
         d.cta.label = draft.ctaLabel;
         d.cta.url = draft.ctaUrl;
       });
-    } else {
-      setFollowUps((s) =>
-        s.map((f) =>
-          f.id === editingId
-            ? {
-                ...f,
-                message: draft.message,
-                subject: draft.subject,
-                heading: draft.heading,
-                body: draft.body,
-                delay: draft.delay ?? f.delay,
-                included: true,
-                status: "active",
-              }
-            : f,
-        ),
-      );
     }
-    setEditingId(null);
+    setEditing(null);
     setDraft(null);
-    notify("Saved");
+    notify("Message saved");
   };
 
   /** Live preview campaign derived from the open draft. */
@@ -239,10 +253,41 @@ export function CampaignWizard() {
         }
       : campaign;
 
-  const editingTitle =
-    editingId === INITIAL_STEP_ID
-      ? "Initial message"
-      : (followUps.find((f) => f.id === editingId)?.name ?? "");
+  const editingStep = steps.find((s) => s.id === editing?.stepId);
+  const editingTemplateId = editing ? (editingStep?.[editing.channel].templateId ?? null) : null;
+
+  const openPicker = (stepId: string, ch: ChannelKey) => {
+    if (ch === "text") return openEditor(stepId, "text");
+    setPickerFor(stepId);
+    setPicker(true);
+  };
+
+  const reviewFirstMissing = () => {
+    const first = attention[0];
+    if (!first) return;
+    setStep("sequence");
+    setTimeout(
+      () =>
+        document
+          .getElementById(`step-${first.step.id}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" }),
+      60,
+    );
+  };
+
+  const checks = [
+    { label: "Audience selected", ok: Boolean(audience) },
+    { label: "Channel strategy configured", ok: channel !== null },
+    { label: "Sequence structure configured", ok: steps.length > 0 },
+    ...(email
+      ? [{ label: "Email content configured", ok: steps.every((s) => s.email.configured) }]
+      : []),
+    ...(text
+      ? [{ label: "Text content configured", ok: steps.every((s) => s.text.configured) }]
+      : []),
+    { label: "Timing configured", ok: true },
+  ];
+  const launchReady = attention.length === 0 && channel !== null;
 
   /* ---------------- Minimised chip ---------------- */
   if (minimized) {
@@ -287,9 +332,9 @@ export function CampaignWizard() {
       <div
         role="dialog"
         aria-label="Create campaign"
-        className={`flex min-h-0 flex-1 flex-col overflow-hidden bg-zinc-100 shadow-2xl ${
+        className={`flex min-h-0 flex-1 flex-col overflow-hidden bg-zinc-50 shadow-2xl ${
           expanded ? "" : "md:border md:border-zinc-300"
-        } ${editingId ? "blur-[2px]" : ""}`}
+        } ${editing ? "blur-[2px]" : ""}`}
       >
         {/* Chrome */}
         <header className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-zinc-200 bg-white px-3 py-2.5 sm:px-4">
@@ -360,9 +405,9 @@ export function CampaignWizard() {
         {/* Step rail */}
         <nav
           aria-label="Campaign steps"
-          className="shrink-0 border-b border-zinc-200 bg-white px-3 pb-3 pt-1 sm:px-4"
+          className="shrink-0 border-b border-zinc-200 bg-white px-3 sm:px-4"
         >
-          <ol className="mx-auto flex max-w-3xl items-stretch gap-2">
+          <ol className="mx-auto flex max-w-4xl items-stretch">
             {STEPS.map((s, i) => {
               const locked = s.id !== "preferences" && !canLeavePreferences;
               const done = i < stepIndex;
@@ -373,33 +418,33 @@ export function CampaignWizard() {
                     disabled={locked}
                     onClick={() => setStep(s.id)}
                     aria-current={current ? "step" : undefined}
-                    className="group flex min-w-0 flex-1 flex-col gap-2 text-left disabled:cursor-not-allowed disabled:opacity-40"
+                    className="group flex min-w-0 flex-1 items-center gap-2.5 border-b-2 px-3 py-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40 data-[current=true]:border-blue-600"
+                    data-current={current}
+                    style={{ borderBottomColor: current ? undefined : "transparent" }}
                   >
-                    <span className="flex min-w-0 items-center gap-2">
+                    <span
+                      className={`grid size-[20px] shrink-0 place-items-center text-[10.5px] font-semibold transition-colors ${
+                        current
+                          ? "bg-blue-600 text-white"
+                          : done
+                            ? "bg-blue-50 text-blue-700"
+                            : "bg-zinc-100 text-zinc-500"
+                      }`}
+                    >
+                      {done ? <Check size={11} /> : i + 1}
+                    </span>
+                    <span className="min-w-0">
                       <span
-                        className={`grid size-[22px] shrink-0 place-items-center text-[11px] font-semibold transition-colors ${
-                          current
-                            ? "bg-blue-600 text-white"
-                            : done
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-zinc-100 text-zinc-500"
-                        }`}
-                      >
-                        {done ? <Check size={12} /> : i + 1}
-                      </span>
-                      <span
-                        className={`truncate text-[12.5px] font-semibold ${
+                        className={`block truncate text-[12.5px] font-semibold ${
                           current ? "text-zinc-900" : "text-zinc-500"
                         }`}
                       >
                         {s.label}
                       </span>
+                      <span className="hidden truncate text-[10.5px] text-zinc-400 sm:block">
+                        {s.hint}
+                      </span>
                     </span>
-                    <span
-                      className={`h-[3px] w-full transition-colors ${
-                        current ? "bg-blue-600" : done ? "bg-blue-200" : "bg-zinc-200"
-                      }`}
-                    />
                   </button>
                 </li>
               );
@@ -409,66 +454,127 @@ export function CampaignWizard() {
 
         {/* ---------------- Step bodies ---------------- */}
         {step === "preferences" && (
-          <div className="min-h-0 flex-1 overflow-y-auto bg-zinc-100">
-            <div className="mx-auto w-full max-w-3xl px-5 py-10">
-              <h1 className="text-[20px] font-semibold tracking-tight">
-                How should this campaign reach your guests?
-              </h1>
-              <p className="mt-1 text-[13px] text-zinc-500">
-                Pick one. You can change it later — everything else happens in the next step.
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <div className="mx-auto w-full max-w-3xl px-5 py-9">
+              <h1 className="text-[18px] font-semibold tracking-tight">Select channel strategy</h1>
+              <p className="mt-1 text-[12.5px] text-zinc-500">
+                Choose how this campaign reaches your guests. You can change it at any time.
               </p>
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <ChannelCard
                   active={channel === "email"}
                   Icon={Mail}
                   title="Email Only"
                   body="Rich, branded email to opted-in guests."
                   onClick={() => setChannel("email")}
+                  onRemove={() => setChannel(null)}
                 />
                 <ChannelCard
                   active={channel === "text"}
                   Icon={MessageSquare}
-                  title="SMS Only"
+                  title="Text Only"
                   body="Short text with a tracked link."
                   onClick={() => setChannel("text")}
+                  onRemove={() => setChannel(null)}
                 />
                 <ChannelCard
                   active={channel === "both"}
                   Icon={Repeat}
-                  title="Email + SMS"
-                  body="Both channels fire in sequence."
+                  title="Text + Email Together"
+                  body="Both channels fire in the same step."
                   onClick={() => setChannel("both")}
+                  onRemove={() => setChannel(null)}
                 />
                 <ChannelCard
                   active={channel === "text_fallback"}
                   Icon={Split}
-                  title="SMS with Email Fallback"
-                  body="Try SMS first, email guests without a phone."
+                  title="Text with Email Fallback"
+                  body="Try text first, email guests without a phone."
                   onClick={() => setChannel("text_fallback")}
+                  onRemove={() => setChannel(null)}
                 />
               </div>
+
+              {channel && (
+                <section className="mt-10 border-t border-zinc-200 pt-8">
+                  <h2 className="text-[16px] font-semibold tracking-tight">Build your sequence</h2>
+                  <p className="mt-1 text-[12.5px] text-zinc-500">
+                    Set up the structure of your campaign. You&rsquo;ll configure your message
+                    content in the next step.
+                  </p>
+                  <div className="mt-6">
+                    <StructureBuilder
+                      steps={steps}
+                      email={email}
+                      text={text}
+                      onAdd={addFollowUp}
+                      onDuplicate={dupStep}
+                      onDelete={deleteStep}
+                      onDelay={(id, d) => patchStep(id, (s) => ({ ...s, delay: d }))}
+                      onConfigure={() => setStep("sequence")}
+                    />
+                  </div>
+                </section>
+              )}
             </div>
           </div>
         )}
 
         {step === "sequence" && (
-          <div className="min-h-0 flex-1 overflow-y-auto bg-zinc-100">
-            <WorkflowCanvas
-              initialExcerpt={
-                hasText(channel) && !hasEmail(channel) ? message : initialEmailBody || message
-              }
-              followUps={followUps}
-              rules={rules}
-              text={hasText(channel)}
-              email={hasEmail(channel)}
-              onOpen={openStep}
-              onToggleInclude={(id, v) =>
-                setFollowUps((s) => s.map((f) => (f.id === id ? { ...f, included: v } : f)))
-              }
-              onAddFollowUp={() => setFollowUps((s) => [...s, makeFollowUp(s.length)])}
-              onAddRule={() => setRuleOpen(true)}
-              onRemoveRule={(id) => setRules((s) => s.filter((r) => r.id !== id))}
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <SequenceBoard
+              steps={steps}
+              email={email}
+              text={text}
+              attention={attention}
+              onReview={reviewFirstMissing}
+              onTemplate={openPicker}
+              onEdit={openEditor}
+              onDelay={(id, d) => patchStep(id, (s) => ({ ...s, delay: d }))}
+              onDuplicate={dupStep}
+              onDelete={deleteStep}
+              onAdd={addFollowUp}
             />
+
+            <div className="mx-auto w-full max-w-2xl px-5 pb-10">
+              <div className="border-t border-zinc-200 pt-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[13px] font-semibold text-zinc-900">Automation rules</p>
+                    <p className="mt-0.5 text-[11.5px] text-zinc-500">
+                      Optional logic, e.g. stop the campaign once a guest books.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setRuleOpen(true)}
+                    className="flex h-8 shrink-0 items-center gap-1.5 border border-zinc-200 bg-white px-3 text-[11.5px] font-medium text-zinc-700 transition-colors hover:border-blue-600 hover:text-blue-700"
+                  >
+                    <GitBranch size={13} /> Add rule
+                  </button>
+                </div>
+                {rules.length > 0 && (
+                  <ul className="mt-3 space-y-2">
+                    {rules.map((r) => (
+                      <li
+                        key={r.id}
+                        className="flex items-center justify-between gap-3 border border-zinc-200 bg-white px-3.5 py-2.5"
+                      >
+                        <span className="text-[12.5px] font-medium text-zinc-700">
+                          {ruleSentence(r)}
+                        </span>
+                        <button
+                          onClick={() => setRules((s) => s.filter((x) => x.id !== r.id))}
+                          aria-label="Remove rule"
+                          className="grid size-7 place-items-center text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
@@ -477,7 +583,7 @@ export function CampaignWizard() {
             <aside className="flex min-h-0 flex-col overflow-hidden border-r border-zinc-200 bg-white">
               <div className="shrink-0 border-b border-zinc-100 px-3 py-2">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
-                  Promotion
+                  Finalize &amp; promote
                 </span>
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -514,8 +620,9 @@ export function CampaignWizard() {
                 />
               </div>
             </aside>
-            <section className="hidden min-h-0 flex-col overflow-y-auto bg-zinc-100 p-6 lg:flex">
-              <div className="mx-auto w-full max-w-lg">
+            <section className="hidden min-h-0 flex-col overflow-y-auto p-6 lg:flex">
+              <div className="mx-auto w-full max-w-lg space-y-6">
+                <ReadinessPanel checks={checks} missing={attention} onReview={reviewFirstMissing} />
                 <PromoPreviewCard
                   accent={campaign.theme.accent}
                   hotel={campaign.footer.company || campaign.header.logoText}
@@ -532,11 +639,17 @@ export function CampaignWizard() {
         {/* Footer */}
         <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-zinc-200 bg-white px-4 py-3">
           <p className="truncate text-[12px] text-zinc-500">
-            {step === "preferences" && !channel
-              ? "Select how the campaign communicates to continue."
+            {step === "preferences"
+              ? channel
+                ? "Build the structure — content comes next."
+                : "Select how the campaign communicates to continue."
               : step === "sequence"
-                ? "Click any card to edit it. Tick a follow-up to include it."
-                : `Step ${stepIndex + 1} of ${STEPS.length}`}
+                ? attention.length > 0
+                  ? `${attention.length} message${attention.length > 1 ? "s" : ""} still need content.`
+                  : "All messages are ready."
+                : launchReady
+                  ? "Everything checks out — you're ready to launch."
+                  : "Resolve the outstanding messages before launching."}
           </p>
           <div className="flex items-center gap-2.5">
             {stepIndex > 0 && (
@@ -548,36 +661,42 @@ export function CampaignWizard() {
               </button>
             )}
             <button
-              disabled={step === "preferences" && !canLeavePreferences}
+              disabled={
+                (step === "preferences" && !canLeavePreferences) ||
+                (stepIndex === STEPS.length - 1 && !launchReady)
+              }
               onClick={() => {
                 if (stepIndex === STEPS.length - 1) return notify("Campaign scheduled");
                 setStep(STEPS[stepIndex + 1].id);
               }}
               className="h-10 bg-blue-600 px-6 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {stepIndex === STEPS.length - 1 ? "Schedule campaign" : "Continue"}
+              {stepIndex === STEPS.length - 1 ? "Launch campaign" : "Next"}
             </button>
           </div>
         </footer>
       </div>
 
-      {editingId && draft && (
+      {editing && draft && (
         <StepOverlay
-          title={editingTitle}
-          text={hasText(channel)}
-          email={hasEmail(channel)}
+          title={`${editingStep?.name ?? ""} · ${editing.channel === "email" ? "Email" : "Text"}`}
+          text={editing.channel === "text"}
+          email={editing.channel === "email"}
           draft={draft}
           onChange={(patch) => setDraft((d) => (d ? { ...d, ...patch } : d))}
           onSave={saveStep}
           onCancel={() => {
-            setEditingId(null);
+            setEditing(null);
             setDraft(null);
           }}
           previewCampaign={previewCampaign}
           sender={campaign.footer.company || campaign.header.logoText}
-          templateName={getTemplate(templateId)?.name ?? null}
-          templateReady={templateReady}
-          onChooseTemplate={() => setPicker(true)}
+          templateName={getTemplate(editingTemplateId)?.name ?? null}
+          templateReady={editing.channel === "email" && editingTemplateId !== null}
+          onChooseTemplate={() => {
+            setPickerFor(editing.stepId);
+            setPicker(true);
+          }}
           mergeTags={MERGE_TAGS}
           media={textMedia}
           mediaSlot={<MediaUploader value={textMedia} onChange={setTextMedia} />}
@@ -597,7 +716,7 @@ export function CampaignWizard() {
 
       <TemplatePicker
         open={picker}
-        currentId={templateId}
+        currentId={pickerFor ? (steps.find((s) => s.id === pickerFor)?.email.templateId ?? null) : null}
         onClose={() => setPicker(false)}
         onApply={(id, next) => {
           const name = campaign.meta.name;
@@ -605,9 +724,23 @@ export function CampaignWizard() {
             Object.assign(d, next);
             d.meta.name = name;
           });
-          setTemplateId(id);
+          const target = pickerFor ?? INITIAL_STEP_ID;
+          patchStep(target, (s) => ({
+            ...s,
+            email: {
+              ...s.email,
+              configured: true,
+              templateId: id,
+              templateName: getTemplate(id)?.name ?? "Template",
+              subject: s.email.subject || stripHtml(next.meta.subject),
+              heading: s.email.heading || stripHtml(next.body.heading),
+              body:
+                s.email.body || next.body.paragraphs.map((p) => stripHtml(p.text)).join("\n\n"),
+            },
+          }));
           setPicker(false);
-          notify("Design applied");
+          setPickerFor(null);
+          notify("Template applied");
         }}
       />
 
