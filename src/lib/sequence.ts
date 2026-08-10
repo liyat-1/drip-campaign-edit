@@ -1,27 +1,36 @@
 /**
- * Campaign message sequence. The initial message is the campaign itself;
- * follow-ups are optional steps that already exist in the workflow and are
- * switched on with a checkbox. Kept deliberately simple so the workflow can
- * later grow branches, rules and per-step channels.
+ * Campaign sequence model.
+ *
+ * The structure of the sequence (how many steps, and the wait between them) is
+ * built in the Preferences step. The *content* of each step — per channel — is
+ * configured in the Sequence step. A step is one communication moment; email
+ * and text are configurations inside it, never separate steps.
  */
 
 export type DelayUnit = "minutes" | "hours" | "days" | "weeks";
 
-export type SeqStatus = "active" | "inactive" | "draft";
+export type ChannelKey = "email" | "text";
 
-export type FollowUp = {
-  id: string;
-  name: string;
-  status: SeqStatus;
-  /** Whether this step is actually sent. Content is never deleted. */
-  included: boolean;
-  delay: { value: number; unit: DelayUnit };
-  /** SMS copy for this step. */
-  message: string;
-  /** Email copy for this step. */
+export type ChannelConfig = {
+  /** Content has been written / a template applied. */
+  configured: boolean;
+  templateId: string | null;
+  templateName: string | null;
   subject: string;
   heading: string;
   body: string;
+  /** SMS copy. */
+  message: string;
+};
+
+export type SequenceStep = {
+  id: string;
+  name: string;
+  kind: "initial" | "followup";
+  /** Wait before this step is sent. Ignored for the initial message. */
+  delay: { value: number; unit: DelayUnit };
+  email: ChannelConfig;
+  text: ChannelConfig;
 };
 
 export const INITIAL_STEP_ID = "initial";
@@ -33,62 +42,101 @@ export const DELAY_UNITS: { value: DelayUnit; label: string }[] = [
   { value: "weeks", label: "Weeks" },
 ];
 
-const sid = () => `fu_${Math.random().toString(36).slice(2, 9)}`;
+const sid = () => `step_${Math.random().toString(36).slice(2, 9)}`;
 
-export function delayLabel(d: FollowUp["delay"]) {
+export function delayLabel(d: SequenceStep["delay"]) {
   const unit = d.value === 1 ? d.unit.replace(/s$/, "") : d.unit;
   return `Wait ${d.value} ${unit}`;
 }
 
-const PRESETS = [
-  {
-    name: "Follow-up 1",
-    delay: { value: 2, unit: "days" as DelayUnit },
-    message:
-      "Just checking in, {{first_name}} — your exclusive rate at {{hotel}} is still available. Reserve today before it expires.",
-    subject: "Still thinking about your next stay?",
-    heading: "Just checking in",
-    body: "We saved your rate at {{hotel}}. Book directly and enjoy your member discount on your next stay.",
-  },
-  {
-    name: "Follow-up 2",
-    delay: { value: 3, unit: "days" as DelayUnit },
-    message:
-      "Last call, {{first_name}} — don't miss your member rate at {{hotel}}. The offer closes soon.",
-    subject: "Last call — don't miss your member rate",
-    heading: "Last call",
-    body: "Your exclusive offer is about to expire. Book now to lock in your rate at {{hotel}}.",
-  },
-  {
-    name: "Follow-up 3",
-    delay: { value: 5, unit: "days" as DelayUnit },
-    message:
-      "One more thing, {{first_name}} — we'd love to welcome you back to {{hotel}} whenever you're ready.",
-    subject: "Whenever you're ready, we're here",
-    heading: "We'd love to have you back",
-    body: "No rush — your guest profile keeps your preferences ready for your next stay at {{hotel}}.",
-  },
-];
-
-export function makeFollowUp(index: number): FollowUp {
-  const p = PRESETS[index % PRESETS.length];
-  const n = index + 1;
+function emptyChannel(partial?: Partial<ChannelConfig>): ChannelConfig {
   return {
-    id: sid(),
-    name: index < PRESETS.length ? p.name : `Follow-up ${n}`,
-    status: "draft",
-    included: false,
-    delay: { ...p.delay },
-    message: p.message,
-    subject: p.subject,
-    heading: p.heading,
-    body: p.body,
+    configured: false,
+    templateId: null,
+    templateName: null,
+    subject: "",
+    heading: "",
+    body: "",
+    message: "",
+    ...partial,
   };
 }
 
-/** Every new campaign starts with three optional follow-ups already drafted. */
-export function defaultFollowUps(): FollowUp[] {
-  return [0, 1, 2].map(makeFollowUp);
+const FOLLOW_UP_PRESETS = [
+  { delay: { value: 2, unit: "days" as DelayUnit } },
+  { delay: { value: 3, unit: "days" as DelayUnit } },
+  { delay: { value: 5, unit: "days" as DelayUnit } },
+];
+
+export function makeFollowUp(index: number): SequenceStep {
+  const preset = FOLLOW_UP_PRESETS[Math.min(index, FOLLOW_UP_PRESETS.length - 1)];
+  return {
+    id: sid(),
+    name: `Follow-up ${index + 1}`,
+    kind: "followup",
+    delay: { ...preset.delay },
+    email: emptyChannel(),
+    text: emptyChannel(),
+  };
+}
+
+export function makeInitialStep(): SequenceStep {
+  return {
+    id: INITIAL_STEP_ID,
+    name: "Initial message",
+    kind: "initial",
+    delay: { value: 0, unit: "days" },
+    email: emptyChannel(),
+    text: emptyChannel(),
+  };
+}
+
+export function duplicateStep(step: SequenceStep, index: number): SequenceStep {
+  return {
+    ...step,
+    id: sid(),
+    kind: "followup",
+    name: `Follow-up ${index + 1}`,
+    email: { ...step.email },
+    text: { ...step.text },
+  };
+}
+
+/** Follow-ups are renumbered so the timeline always reads 1, 2, 3… */
+export function renumber(steps: SequenceStep[]): SequenceStep[] {
+  let n = 0;
+  return steps.map((s) =>
+    s.kind === "initial" ? s : { ...s, name: `Follow-up ${++n}` },
+  );
+}
+
+/** A new campaign starts with just the initial message. */
+export function defaultSteps(): SequenceStep[] {
+  return [makeInitialStep()];
+}
+
+export type ConfigState = "ready" | "needs" | "off";
+
+export function channelState(
+  step: SequenceStep,
+  key: ChannelKey,
+  active: boolean,
+): ConfigState {
+  if (!active) return "off";
+  return step[key].configured ? "ready" : "needs";
+}
+
+export function missingChannels(
+  steps: SequenceStep[],
+  channels: { email: boolean; text: boolean },
+): { step: SequenceStep; channel: ChannelKey }[] {
+  const out: { step: SequenceStep; channel: ChannelKey }[] = [];
+  for (const step of steps) {
+    (["email", "text"] as ChannelKey[]).forEach((c) => {
+      if (channels[c] && !step[c].configured) out.push({ step, channel: c });
+    });
+  }
+  return out;
 }
 
 /* ------------------------- Rules ------------------------- */
@@ -142,5 +190,10 @@ export function ruleSentence(r: Rule) {
 }
 
 export function makeRule(): Rule {
-  return { id: `rule_${Math.random().toString(36).slice(2, 9)}`, trigger: "booked", action: "stop", days: 3 };
+  return {
+    id: `rule_${Math.random().toString(36).slice(2, 9)}`,
+    trigger: "booked",
+    action: "stop",
+    days: 3,
+  };
 }

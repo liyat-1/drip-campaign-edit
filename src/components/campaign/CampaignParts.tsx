@@ -12,10 +12,13 @@ import {
   Trash2,
   BadgePercent,
   FileText,
+  Repeat2,
+  X,
 } from "lucide-react";
 import { RailSection } from "../editor/RailSection";
 import { Select } from "../editor/Select";
 import { Field, TextInput, ToggleRow } from "../editor/controls";
+import { StepMenu } from "./StepMenu";
 import heroAmalfi from "@/assets/hero-amalfi.jpg";
 import heroValley from "@/assets/hero-valley.jpg";
 
@@ -261,42 +264,64 @@ export function ChannelCard({
   title,
   body,
   onClick,
+  onRemove,
 }: {
   active: boolean;
   Icon: React.ComponentType<{ size?: number; className?: string }>;
   title: string;
   body: string;
   onClick: () => void;
+  onRemove?: () => void;
 }) {
   return (
-    <button
-      onClick={onClick}
-      aria-pressed={active}
-      className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-md border p-3.5 text-left transition-all ${
-        active
-          ? "border-blue-600 bg-blue-50/60 ring-1 ring-blue-600/20"
-          : "border-zinc-200 hover:border-zinc-400"
+    <div
+      className={`relative border transition-all ${
+        active ? "border-blue-600 bg-blue-50/50" : "border-zinc-200 hover:border-zinc-400"
       }`}
     >
-      <span
-        className={`grid size-9 shrink-0 place-items-center rounded-md ${
-          active ? "bg-blue-600 text-white" : "bg-zinc-100 text-zinc-500"
-        }`}
+      <button
+        onClick={onClick}
+        aria-pressed={active}
+        className="grid w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-3 p-3.5 pr-10 text-left"
       >
-        <Icon size={17} />
+        <span
+          className={`grid size-9 shrink-0 place-items-center ${
+            active ? "bg-blue-600 text-white" : "bg-zinc-100 text-zinc-500"
+          }`}
+        >
+          <Icon size={17} />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-[13px] font-semibold text-zinc-900">{title}</span>
+          <span className="mt-0.5 block text-[11.5px] leading-snug text-zinc-500">{body}</span>
+        </span>
+      </button>
+      <span className="absolute right-2.5 top-3">
+        {active && onRemove ? (
+          <StepMenu
+            label={`${title} options`}
+            items={[
+              { label: "Change", icon: Repeat2, onSelect: onClick },
+              {
+                label: "Remove",
+                icon: X,
+                destructive: true,
+                separated: true,
+                onSelect: onRemove,
+              },
+            ]}
+          />
+        ) : (
+          <span
+            className={`grid size-5 place-items-center rounded-full border ${
+              active ? "border-blue-600 bg-blue-600 text-white" : "border-zinc-300"
+            }`}
+          >
+            {active && <Check size={12} />}
+          </span>
+        )}
       </span>
-      <span className="min-w-0">
-        <span className="block text-[13px] font-semibold text-zinc-900">{title}</span>
-        <span className="mt-0.5 block text-[11.5px] leading-snug text-zinc-500">{body}</span>
-      </span>
-      <span
-        className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border ${
-          active ? "border-blue-600 bg-blue-600 text-white" : "border-zinc-300"
-        }`}
-      >
-        {active && <Check size={12} />}
-      </span>
-    </button>
+    </div>
   );
 }
 
