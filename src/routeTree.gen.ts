@@ -17,6 +17,7 @@ import { Route as CampaignRouteImport } from './routes/campaign'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OtaIndexRouteImport } from './routes/ota.index'
+import { Route as OtaOpportunitiesRouteImport } from './routes/ota.opportunities'
 import { Route as OtaOfferRouteImport } from './routes/ota.offer'
 import { Route as OtaJourneyRouteImport } from './routes/ota.journey'
 import { Route as OtaGuestsRouteImport } from './routes/ota.guests'
@@ -61,6 +62,11 @@ const OtaIndexRoute = OtaIndexRouteImport.update({
   path: '/',
   getParentRoute: () => OtaRoute,
 } as any)
+const OtaOpportunitiesRoute = OtaOpportunitiesRouteImport.update({
+  id: '/opportunities',
+  path: '/opportunities',
+  getParentRoute: () => OtaRoute,
+} as any)
 const OtaOfferRoute = OtaOfferRouteImport.update({
   id: '/offer',
   path: '/offer',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/ota/guests': typeof OtaGuestsRoute
   '/ota/journey': typeof OtaJourneyRoute
   '/ota/offer': typeof OtaOfferRoute
+  '/ota/opportunities': typeof OtaOpportunitiesRoute
   '/ota/': typeof OtaIndexRoute
 }
 export interface FileRoutesByTo {
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/ota/guests': typeof OtaGuestsRoute
   '/ota/journey': typeof OtaJourneyRoute
   '/ota/offer': typeof OtaOfferRoute
+  '/ota/opportunities': typeof OtaOpportunitiesRoute
   '/ota': typeof OtaIndexRoute
 }
 export interface FileRoutesById {
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/ota/guests': typeof OtaGuestsRoute
   '/ota/journey': typeof OtaJourneyRoute
   '/ota/offer': typeof OtaOfferRoute
+  '/ota/opportunities': typeof OtaOpportunitiesRoute
   '/ota/': typeof OtaIndexRoute
 }
 export interface FileRouteTypes {
@@ -129,6 +138,7 @@ export interface FileRouteTypes {
     | '/ota/guests'
     | '/ota/journey'
     | '/ota/offer'
+    | '/ota/opportunities'
     | '/ota/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/ota/guests'
     | '/ota/journey'
     | '/ota/offer'
+    | '/ota/opportunities'
     | '/ota'
   id:
     | '__root__'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/ota/guests'
     | '/ota/journey'
     | '/ota/offer'
+    | '/ota/opportunities'
     | '/ota/'
   fileRoutesById: FileRoutesById
 }
@@ -225,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OtaIndexRouteImport
       parentRoute: typeof OtaRoute
     }
+    '/ota/opportunities': {
+      id: '/ota/opportunities'
+      path: '/opportunities'
+      fullPath: '/ota/opportunities'
+      preLoaderRoute: typeof OtaOpportunitiesRouteImport
+      parentRoute: typeof OtaRoute
+    }
     '/ota/offer': {
       id: '/ota/offer'
       path: '/offer'
@@ -253,6 +272,7 @@ interface OtaRouteChildren {
   OtaGuestsRoute: typeof OtaGuestsRoute
   OtaJourneyRoute: typeof OtaJourneyRoute
   OtaOfferRoute: typeof OtaOfferRoute
+  OtaOpportunitiesRoute: typeof OtaOpportunitiesRoute
   OtaIndexRoute: typeof OtaIndexRoute
 }
 
@@ -260,6 +280,7 @@ const OtaRouteChildren: OtaRouteChildren = {
   OtaGuestsRoute: OtaGuestsRoute,
   OtaJourneyRoute: OtaJourneyRoute,
   OtaOfferRoute: OtaOfferRoute,
+  OtaOpportunitiesRoute: OtaOpportunitiesRoute,
   OtaIndexRoute: OtaIndexRoute,
 }
 
