@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Bell, Info } from "lucide-react";
 import { NOTIFICATIONS } from "@/lib/otaBuster";
 
-const NAV = [
+const NAV: { to: string; label: string; exact?: boolean }[] = [
   { to: "/ota", label: "Overview", exact: true },
   { to: "/ota/journey", label: "Guest journey" },
   { to: "/ota/offer", label: "Direct booking offer" },
@@ -12,7 +12,7 @@ const NAV = [
   { to: "/ota/opportunities", label: "Opportunities" },
   { to: "/ota/performance", label: "Performance" },
   { to: "/ota/settings", label: "Settings" },
-] as const;
+];
 
 /** Small label + value pair used across every OTA Buster surface. */
 export function Stat({
@@ -141,7 +141,7 @@ export function ButtonLink({
   } as const;
   return (
     <Link
-      to={to}
+      to={to as "/"}
       className={`inline-flex items-center gap-2 px-3.5 py-2 text-[12.5px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${styles[variant]}`}
     >
       {children}
@@ -251,7 +251,7 @@ export function OtaShell({ children }: { children: ReactNode }) {
               return (
                 <li key={item.to}>
                   <Link
-                    to={item.to}
+                    to={item.to as "/"}
                     className={`inline-block whitespace-nowrap border-b-2 px-3 py-2.5 text-[12.5px] font-semibold transition-colors ${
                       active
                         ? "border-blue-600 text-blue-700"
