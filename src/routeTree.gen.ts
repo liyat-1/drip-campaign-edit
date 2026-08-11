@@ -16,6 +16,7 @@ import { Route as CanvasRouteImport } from './routes/canvas'
 import { Route as CampaignRouteImport } from './routes/campaign'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OtaIndexRouteImport } from './routes/ota.index'
 
 const StructuredRoute = StructuredRouteImport.update({
   id: '/structured',
@@ -52,24 +53,30 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OtaIndexRoute = OtaIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OtaRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/campaign': typeof CampaignRoute
   '/canvas': typeof CanvasRoute
-  '/ota': typeof OtaRoute
+  '/ota': typeof OtaRouteWithChildren
   '/roi': typeof RoiRoute
   '/structured': typeof StructuredRoute
+  '/ota/': typeof OtaIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/campaign': typeof CampaignRoute
   '/canvas': typeof CanvasRoute
-  '/ota': typeof OtaRoute
   '/roi': typeof RoiRoute
   '/structured': typeof StructuredRoute
+  '/ota': typeof OtaIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,9 +84,10 @@ export interface FileRoutesById {
   '/analytics': typeof AnalyticsRoute
   '/campaign': typeof CampaignRoute
   '/canvas': typeof CanvasRoute
-  '/ota': typeof OtaRoute
+  '/ota': typeof OtaRouteWithChildren
   '/roi': typeof RoiRoute
   '/structured': typeof StructuredRoute
+  '/ota/': typeof OtaIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,15 +99,16 @@ export interface FileRouteTypes {
     | '/ota'
     | '/roi'
     | '/structured'
+    | '/ota/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/analytics'
     | '/campaign'
     | '/canvas'
-    | '/ota'
     | '/roi'
     | '/structured'
+    | '/ota'
   id:
     | '__root__'
     | '/'
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/ota'
     | '/roi'
     | '/structured'
+    | '/ota/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -116,7 +126,7 @@ export interface RootRouteChildren {
   AnalyticsRoute: typeof AnalyticsRoute
   CampaignRoute: typeof CampaignRoute
   CanvasRoute: typeof CanvasRoute
-  OtaRoute: typeof OtaRoute
+  OtaRoute: typeof OtaRouteWithChildren
   RoiRoute: typeof RoiRoute
   StructuredRoute: typeof StructuredRoute
 }
@@ -172,15 +182,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ota/': {
+      id: '/ota/'
+      path: '/'
+      fullPath: '/ota/'
+      preLoaderRoute: typeof OtaIndexRouteImport
+      parentRoute: typeof OtaRoute
+    }
   }
 }
+
+interface OtaRouteChildren {
+  OtaIndexRoute: typeof OtaIndexRoute
+}
+
+const OtaRouteChildren: OtaRouteChildren = {
+  OtaIndexRoute: OtaIndexRoute,
+}
+
+const OtaRouteWithChildren = OtaRoute._addFileChildren(OtaRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyticsRoute: AnalyticsRoute,
   CampaignRoute: CampaignRoute,
   CanvasRoute: CanvasRoute,
-  OtaRoute: OtaRoute,
+  OtaRoute: OtaRouteWithChildren,
   RoiRoute: RoiRoute,
   StructuredRoute: StructuredRoute,
 }
