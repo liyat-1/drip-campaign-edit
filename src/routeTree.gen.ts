@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StructuredRouteImport } from './routes/structured'
 import { Route as RoiRouteImport } from './routes/roi'
+import { Route as OtaRouteImport } from './routes/ota'
 import { Route as CanvasRouteImport } from './routes/canvas'
 import { Route as CampaignRouteImport } from './routes/campaign'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
@@ -24,6 +25,11 @@ const StructuredRoute = StructuredRouteImport.update({
 const RoiRoute = RoiRouteImport.update({
   id: '/roi',
   path: '/roi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OtaRoute = OtaRouteImport.update({
+  id: '/ota',
+  path: '/ota',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CanvasRoute = CanvasRouteImport.update({
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AnalyticsRoute
   '/campaign': typeof CampaignRoute
   '/canvas': typeof CanvasRoute
+  '/ota': typeof OtaRoute
   '/roi': typeof RoiRoute
   '/structured': typeof StructuredRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AnalyticsRoute
   '/campaign': typeof CampaignRoute
   '/canvas': typeof CanvasRoute
+  '/ota': typeof OtaRoute
   '/roi': typeof RoiRoute
   '/structured': typeof StructuredRoute
 }
@@ -69,6 +77,7 @@ export interface FileRoutesById {
   '/analytics': typeof AnalyticsRoute
   '/campaign': typeof CampaignRoute
   '/canvas': typeof CanvasRoute
+  '/ota': typeof OtaRoute
   '/roi': typeof RoiRoute
   '/structured': typeof StructuredRoute
 }
@@ -79,16 +88,25 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/campaign'
     | '/canvas'
+    | '/ota'
     | '/roi'
     | '/structured'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/analytics' | '/campaign' | '/canvas' | '/roi' | '/structured'
+  to:
+    | '/'
+    | '/analytics'
+    | '/campaign'
+    | '/canvas'
+    | '/ota'
+    | '/roi'
+    | '/structured'
   id:
     | '__root__'
     | '/'
     | '/analytics'
     | '/campaign'
     | '/canvas'
+    | '/ota'
     | '/roi'
     | '/structured'
   fileRoutesById: FileRoutesById
@@ -98,6 +116,7 @@ export interface RootRouteChildren {
   AnalyticsRoute: typeof AnalyticsRoute
   CampaignRoute: typeof CampaignRoute
   CanvasRoute: typeof CanvasRoute
+  OtaRoute: typeof OtaRoute
   RoiRoute: typeof RoiRoute
   StructuredRoute: typeof StructuredRoute
 }
@@ -116,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/roi'
       fullPath: '/roi'
       preLoaderRoute: typeof RoiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ota': {
+      id: '/ota'
+      path: '/ota'
+      fullPath: '/ota'
+      preLoaderRoute: typeof OtaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/canvas': {
@@ -154,19 +180,10 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsRoute: AnalyticsRoute,
   CampaignRoute: CampaignRoute,
   CanvasRoute: CanvasRoute,
+  OtaRoute: OtaRoute,
   RoiRoute: RoiRoute,
   StructuredRoute: StructuredRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
