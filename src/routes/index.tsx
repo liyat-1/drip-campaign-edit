@@ -41,6 +41,12 @@ function Index() {
           <a className="hover:text-zinc-900" href="#">Analytics</a>
         </nav>
         <Link
+          to="/ota"
+          className="mr-2 border border-zinc-300 bg-white px-4 py-2 text-[13px] font-semibold text-zinc-800 hover:border-zinc-400"
+        >
+          OTA Buster
+        </Link>
+        <Link
           to="/campaign"
           className="rounded-lg bg-zinc-900 px-4 py-2 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
         >
